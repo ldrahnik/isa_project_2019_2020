@@ -1,12 +1,10 @@
-file=manual
-
 doc:
-	latex ${file}.tex
-	bibtex ${file}
-	latex ${file}.tex
-	latex ${file}.tex
-	dvips ${file}.dvi
-	ps2pdf -sPAPERSIZE=a4 ${file}.ps
+	latex ${NAME}.tex
+	bibtex ${NAME}
+	latex ${NAME}.tex
+	latex ${NAME}.tex
+	dvips ${NAME}.dvi
+	ps2pdf -sPAPERSIZE=a4 ${NAME}.ps
 
 clean:
 	rm -f *.dvi

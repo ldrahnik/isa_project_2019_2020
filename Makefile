@@ -7,9 +7,9 @@
 ################# PROJECT #########################
 
 P_NAME = dns
-P_DOC = manual
-P_DOC_SOURCE = doc/$(P_DOC).tex
-P_DOC_RESULT = doc/$(P_DOC).pdf
+P_DOC_NAME = manual
+P_DOC_SOURCE = doc/$(P_DOC_NAME).tex
+P_DOC_RESULT = doc/$(P_DOC_NAME).pdf
 P_DOC_MAKEFILE = doc/Makefile
 P_SOURCES = src/*.c
 P_HEADERS = src/*.h
@@ -41,7 +41,7 @@ rmtar:
 ################### DOC ############################
 
 tex:
-	cd doc && make doc
+	cd doc && make doc NAME=$(P_DOC_NAME)
 
 ################# CLEAN ############################
 
