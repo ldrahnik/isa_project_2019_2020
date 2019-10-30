@@ -7,8 +7,9 @@
 ################# PROJECT #########################
 
 P_NAME = dns
-P_DOC = doc/dns_resolver.pdf
-P_DOC_SOURCE = doc/dns_resolver_doc.tex
+P_DOC = manual
+P_DOC_SOURCE = doc/$(P_DOC).tex
+P_DOC_RESULT = doc/$(P_DOC).pdf
 P_DOC_MAKEFILE = doc/Makefile
 P_SOURCES = src/*.c
 P_HEADERS = src/*.h
@@ -29,7 +30,7 @@ $(P_NAME): $(P_SOURCES) $(P_HEADERS)
 ################# ARCHIVE #########################
 
 A_NAME = xdrahn00
-A_FILES = Makefile $(P_DOC) $(P_DOC_MAKEFILE) $(P_DOC_MAKEFILE) $(P_SOURCES) $(P_HEADERS)
+A_FILES = Makefile $(P_DOC_RESULT) $(P_DOC_MAKEFILE) $(P_SOURCES) $(P_HEADERS)
 
 tar:
 	tar -cvzf $(A_NAME).tar $(A_FILES)

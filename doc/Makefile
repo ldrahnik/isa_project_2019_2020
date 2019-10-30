@@ -1,4 +1,4 @@
-file=hamilton_path_doc
+file=manual
 
 doc:
 	latex ${file}.tex
