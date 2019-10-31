@@ -49,23 +49,9 @@ void convertNameToDNSFormat(unsigned char* host, unsigned char* dns)
     *dns++='\0';
 }
 
-/* main */
-int main(int argc, char *argv[]) {
+/* handle process of dns request and response */
+int dns(TParams params) {
   int ecode = EOK;
-
-  // get params
-  TParams params = getParams(argc, argv);
-  if(params.ecode != EOK) {
-    cleanParams(params);
-    return params.ecode;
-  }
-
-  // help message
-  if(params.show_help_message) {
-    printf("%s", HELP_MSG);
-    cleanParams(params);
-    return ecode;
-  }
 
   // create socket
   int s;
@@ -159,6 +145,33 @@ int main(int argc, char *argv[]) {
     printf("DEBUG: Answer section: %d\n", ntohs(dns_header->ancount));
     printf("DEBUG: Authority records section: %d\n", ntohs(dns_header->nscount));
     printf("DEBUG: Additional records section: %d\n\n", ntohs(dns_header->arcount));
+  }
+
+  return ecode;
+}
+
+/* main */
+int main(int argc, char *argv[]) {
+  int ecode = EOK;
+
+  // get params
+  TParams params = getParams(argc, argv);
+  if(params.ecode != EOK) {
+    cleanParams(params);
+    return params.ecode;
+  }
+
+  // help message
+  if(params.show_help_message) {
+    printf("%s", HELP_MSG);
+    cleanParams(params);
+    return ecode;
+  }
+
+  // process dns
+  if((ecode = dns(params)) != 0) {
+    cleanParams(params);
+    return ecode;
   }
 
   return ecode;
