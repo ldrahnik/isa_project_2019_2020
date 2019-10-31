@@ -24,6 +24,7 @@ TParams getParams(int argc, char *argv[]) {
   // params
   TParams params = {
     .show_help_message = 0,
+    .debug = 0,
     .ecode = EOK,
     .recursion_desired = 0,
     .reverse_lookup = 0,
@@ -38,11 +39,14 @@ TParams getParams(int argc, char *argv[]) {
 
   // getopt
   int c;
-  while ((c = getopt(argc, argv, "hrx6s:p:")) != -1) {
+  while ((c = getopt(argc, argv, "hdrx6s:p:")) != -1) {
     switch (c) {
       case 'h':
         params.show_help_message = 1;
  	    return params;
+      case 'd':
+        params.debug = 1;
+        break;
       case 'r':
         params.recursion_desired = 1;
         break;
@@ -95,6 +99,12 @@ TParams getParams(int argc, char *argv[]) {
   // address is required
   if(argv[optind] == NULL) {
     fprintf(stderr, "Option error. Address is required.\n");
+    params.ecode = EOPT;
+    return params;
+  }
+
+  if(params.server == NULL) {
+    fprintf(stderr, "Option error. Server is required.\n");
     params.ecode = EOPT;
     return params;
   }

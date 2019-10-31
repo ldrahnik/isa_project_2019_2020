@@ -16,6 +16,7 @@
 typedef struct params {
   int ecode; // error code
   int show_help_message; // show help message
+  int debug; // debug
   int recursion_desired; // option -r
   int reverse_lookup; // option -x
   int ipv6; // option -6
