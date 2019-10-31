@@ -14,6 +14,8 @@ enum ecodes {
   EOPT = 1, // invalid option (unknown option, unknown option character, required value when is option used is missing)
   EALLOC = 2, // allocation problem
   ESOCKET = 3, // socket problem
+  ESENDTO = 4, // sendto() function problem
+  ERECEIVEFROM = 5, // receivefrom() function problem
 };
 
 #endif

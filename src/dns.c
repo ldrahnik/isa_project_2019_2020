@@ -75,10 +75,20 @@ int main(int argc, char *argv[]) {
     return ESOCKET;
   }
 
-  // destination socket address
+  // set server address
+  struct addrinfo hints;
+  struct addrinfo *server;
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_DGRAM;
+  hints.ai_protocol = 0;
+  hints.ai_flags = AI_ADDRCONFIG;
+  getaddrinfo(params.server, NULL, &hints, &server);
+
   struct sockaddr_in server_addr;
   server_addr.sin_family = AF_INET;
   server_addr.sin_port = htons(params.port);
+  server_addr.sin_addr = ((struct sockaddr_in*)server->ai_addr)->sin_addr;
   server_addr.sin_addr.s_addr = inet_addr(params.server);
 
   // create buffer
@@ -114,7 +124,7 @@ int main(int argc, char *argv[]) {
 
   // question section
   // https://tools.ietf.org/html/rfc1035 (4.1.2. Question section format)
-  DNS_Question* dns_question = (DNS_Question*)(buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 1));
+  DNS_Question* dns_question = (DNS_Question*)(buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 3));
   if(params.ipv6) {
     dns_question->qtype = htons(TYPE_AAAA);
   } else {
@@ -125,19 +135,20 @@ int main(int argc, char *argv[]) {
   if(sendto(s, buffer, sizeof(buffer), 0, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
   {
     perror("sendto()");
+    return ESENDTO;
   }
   if(params.debug) {
-     fprintf(stderr, "\nDEBUG: Packet has been sucessfully send.");
+     fprintf(stderr, "\nDEBUG: Packet has been sucessfully send.\n");
   }
 
   int i = sizeof(server_addr);
-  printf("\nDEBUG: Receiving answer...");
   if(recvfrom(s,(char*)buffer, 65535, 0, (struct sockaddr*)&server_addr, (socklen_t*)&i) < 0)
   {
       perror("recvfrom()");
+      return ERECEIVEFROM;
   }
   if(params.debug) {
-     fprintf(stderr, "\nDEBUG: Packet has been sucessfully received.");
+     fprintf(stderr, "\nDEBUG: Packet has been sucessfully received.\n");
   }
 
   dns_header = (DNS_Header*) buffer;

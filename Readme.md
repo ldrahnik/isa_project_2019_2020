@@ -14,5 +14,4 @@ EXTENSIONS:
 
 WIP:
 
-1) funkce pro převod do formátu DNS
-2) uvedení jména ve struktuře, nejde
+1) Malformed packet

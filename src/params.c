@@ -8,12 +8,6 @@
 
 #include "params.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <ctype.h> // isprint
-
 /**
  * Get TParams structure from terminal options
  *
@@ -103,8 +97,16 @@ TParams getParams(int argc, char *argv[]) {
     return params;
   }
 
+  // server is required
   if(params.server == NULL) {
     fprintf(stderr, "Option error. Server is required.\n");
+    params.ecode = EOPT;
+    return params;
+  }
+
+  // validate given server
+  if(isValidHost(params.server) != 0) {
+    fprintf(stderr, "Option error. Given server is not valid.\n");
     params.ecode = EOPT;
     return params;
   }
@@ -125,6 +127,23 @@ TParams getParams(int argc, char *argv[]) {
   strcpy(params.address, argv[optind]);
 
   return params;
+}
+
+int isValidHost(char* host) {
+  struct addrinfo hints;
+  struct addrinfo* results;
+
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_DGRAM;
+  hints.ai_protocol = 0;
+  hints.ai_flags = AI_ADDRCONFIG;
+
+  if(getaddrinfo(host, NULL, &hints, &results) != 0) {
+    return 1;
+  }
+
+  return 0;
 }
 
 void cleanParams(TParams params) {

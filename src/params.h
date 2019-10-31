@@ -10,6 +10,14 @@
 #define _params_H_
 
 #include "string.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <ctype.h> // isprint
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <netdb.h>
 
 #include "error.h"
 
@@ -26,6 +34,7 @@ typedef struct params {
 } TParams;
 
 TParams getParams(int argc, char *argv[]);
+int isValidHost(char* host);
 void cleanParams(TParams params);
 
 #endif
