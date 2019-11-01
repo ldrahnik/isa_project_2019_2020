@@ -36,18 +36,43 @@ TParams getParams(int argc, char *argv[]) {
   while ((c = getopt(argc, argv, "hdrx6s:p:")) != -1) {
     switch (c) {
       case 'h':
+        if(params.show_help_message) {
+	      fprintf(stderr, "Option -h is already used.\n");
+          params.ecode = EOPT;
+          return params;
+	    }
         params.show_help_message = 1;
- 	    return params;
+ 	    break;
       case 'd':
+        if(params.debug) {
+	      fprintf(stderr, "Option -d is already used.\n");
+          params.ecode = EOPT;
+          return params;
+	    }
         params.debug = 1;
         break;
       case 'r':
+        if(params.recursion_desired) {
+	      fprintf(stderr, "Option -r is already used.\n");
+          params.ecode = EOPT;
+          return params;
+	    }
         params.recursion_desired = 1;
         break;
       case 'x':
+        if(params.reverse_lookup) {
+	      fprintf(stderr, "Option -x is already used.\n");
+          params.ecode = EOPT;
+          return params;
+	    }
         params.reverse_lookup = 1;
         break;
       case '6':
+        if(params.ipv6) {
+	      fprintf(stderr, "Option -6 is already used.\n");
+          params.ecode = EOPT;
+          return params;
+	    }
         params.ipv6 = 1;
         break;
       case 's':

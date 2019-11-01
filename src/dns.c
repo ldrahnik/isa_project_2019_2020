@@ -118,7 +118,7 @@ int dns(TParams params) {
   }
   dns_question->qclass = htons(CLASS_IN);
 
-  if(sendto(s, buffer, sizeof(buffer), 0, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
+  if(sendto(s, (char*) buffer, sizeof(DNS_Header) + (strlen((const char*)qname) + 3) + sizeof(DNS_Question), 0, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
   {
     perror("sendto()");
     return ESENDTO;
