@@ -197,32 +197,49 @@ int dns(TParams params) {
   unsigned char* reader = (receive_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 1) + sizeof(DNS_Question));
 
   int rname_length = 0;
-  printf("Authoritative: %s, Recursive: %s, Truncated: %s\n\n",
+  printf(
+    "Authoritative: %s, Recursive: %s, Truncated: %s\n\n",
     dns_receive_header->tc == 1 ? "Yes" : "No",
     dns_receive_header->rd == 1 ? "Yes" : "No",
     dns_receive_header->tc == 1 ? "Yes" : "No"
   );
 
-  printf("Question section (%d):\n", ntohs(dns_receive_header->qdcount));
-  printf("Answer section (%d):\n", ntohs(dns_receive_header->ancount));
+  uint16_t i;
+  unsigned char* rname;
+  DNS_RR_Data* dns_rr_data = malloc(sizeof(DNS_RR_Data));
 
-  for(uint16_t i = 0; i < ntohs(dns_receive_header->ancount); i++)
+  printf("Question section (%d):\n", ntohs(dns_receive_header->qdcount));
+  for(i = 0; i < ntohs(dns_receive_header->qdcount); i++)
   {
-    unsigned char* rname = ReadName(reader, receive_buffer, &rname_length);
- 
-    DNS_RR_Data* dns_rr_data = malloc(sizeof(DNS_RR_Data));
+    rname = ReadName(reader, receive_buffer, &rname_length);
     dns_rr_data = (DNS_RR_Data*)(reader + rname_length);
-    reader = reader + sizeof(DNS_RR_Data);
  
-    if(ntohs(dns_rr_data->rtype) == TYPE_A) //IPv4 address
+    if(ntohs(dns_rr_data->rtype) == TYPE_A)
+    {
+       printf("  %s, A, IN\n", rname);
+    }
+
+    reader = (reader + rname_length + sizeof(DNS_RR_Data));
+  }
+
+  printf("Answer section (%d):\n", ntohs(dns_receive_header->ancount));
+  for(i = 0; i < ntohs(dns_receive_header->ancount); i++)
+  {
+    rname = ReadName(reader, receive_buffer, &rname_length);
+    dns_rr_data = (DNS_RR_Data*)(reader + rname_length);
+
+    if(ntohs(dns_rr_data->rtype) == TYPE_A)
     {
        printf("  %s, A, IN, %i\n", rname, ntohs(dns_rr_data->rttl));
     }
+
+    reader = reader + rname_length + sizeof(DNS_RR_Data);
   }
   printf("Authority section (%d):\n", ntohs(dns_header->nscount));
   printf("Additional section (%d):\n", ntohs(dns_header->arcount));
 
   // clean
+  free(dns_rr_data);
   free(send_buffer);
   free(receive_buffer);
 
