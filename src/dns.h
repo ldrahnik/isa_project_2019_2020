@@ -18,28 +18,27 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/ip_icmp.h>
 
 /*
  * https://www.ietf.org/rfc/rfc1035.txt (3.2.4. CLASS values)
  */
-#define CLASS_IN           1 
+#define CLASS_IN 1 
 
 /*
  * https://www.ietf.org/rfc/rfc1035.txt (3.2.2. TYPE values)
  */
-#define TYPE_PTR          12
+#define TYPE_PTR 12
 
 /*
  * https://www.ietf.org/rfc/rfc1035.txt (3.2.2. TYPE values)
  */
-#define TYPE_A             1
+#define TYPE_A 1
 
 /*
  * https://tools.ietf.org/html/rfc3596#section-2.1 (2.1 AAAA record type)
  */
-#define TYPE_AAAA         28
-
-#define MAX_RECEIVE_UDP_PACKET_LENGTH 65535
+#define TYPE_AAAA 28
 
 /*
  * https://www.ietf.org/rfc/rfc1035.txt (4.1.1. Header section format) 

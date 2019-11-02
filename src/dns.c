@@ -116,7 +116,7 @@ int dns(TParams params) {
     return ESOCKET;
   }
 
-  // set server address
+  // server address
   struct addrinfo hints;
   struct addrinfo *server;
   memset(&hints, 0, sizeof(struct addrinfo));
@@ -169,9 +169,9 @@ int dns(TParams params) {
   if(params.ipv6) {
     dns_question->qtype = 28; //htons(TYPE_AAAA); TODO:
   } else {
-    dns_question->qtype = 1; //htons(TYPE_A); TODO:
+    dns_question->qtype = 1; //htons(TYPE_A); //TODO:
   }
-  dns_question->qclass = 1; //htons(CLASS_IN); TODO:
+  dns_question->qclass = 1; //htons(CLASS_IN); //TODO:
 
   if(sendto(s, (char*) send_buffer, sizeof(DNS_Header) + (strlen((const char*)qname) + 2) + sizeof(DNS_Question), 0, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
   {
@@ -183,8 +183,8 @@ int dns(TParams params) {
   }
 
   int ii = sizeof(server_addr);
-  unsigned char* receive_buffer = malloc(MAX_RECEIVE_UDP_PACKET_LENGTH);
-  if(recvfrom(s,(char*)receive_buffer, MAX_RECEIVE_UDP_PACKET_LENGTH, 0, (struct sockaddr*)&server_addr, (socklen_t*)&ii) < 0)
+  unsigned char* receive_buffer = malloc(IP_MAXPACKET);
+  if(recvfrom(s,(char*)receive_buffer, IP_MAXPACKET, 0, (struct sockaddr*)&server_addr, (socklen_t*)&ii) < 0)
   {
       perror("recvfrom()");
       return ERECEIVEFROM;
@@ -206,7 +206,7 @@ int dns(TParams params) {
 
   uint16_t i;
   unsigned char* rname;
-  DNS_RR_Data* dns_rr_data = malloc(sizeof(DNS_RR_Data));
+  DNS_RR_Data* dns_rr_data;
 
   printf("Question section (%d):\n", ntohs(dns_receive_header->qdcount));
   for(i = 0; i < ntohs(dns_receive_header->qdcount); i++)
@@ -223,7 +223,7 @@ int dns(TParams params) {
   }
 
   printf("Answer section (%d):\n", ntohs(dns_receive_header->ancount));
-  for(i = 0; i < ntohs(dns_receive_header->ancount); i++)
+/*  for(i = 0; i < ntohs(dns_receive_header->ancount); i++)
   {
     rname = ReadName(reader, receive_buffer, &rname_length);
     dns_rr_data = (DNS_RR_Data*)(reader + rname_length);
@@ -234,12 +234,13 @@ int dns(TParams params) {
     }
 
     reader = reader + rname_length + sizeof(DNS_RR_Data);
-  }
+  }*/
   printf("Authority section (%d):\n", ntohs(dns_header->nscount));
   printf("Additional section (%d):\n", ntohs(dns_header->arcount));
 
   // clean
-  free(dns_rr_data);
+  freeaddrinfo(server);
+  free(rname);
   free(send_buffer);
   free(receive_buffer);
 

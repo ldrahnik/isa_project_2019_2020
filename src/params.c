@@ -165,8 +165,11 @@ int isValidHost(char* host) {
   hints.ai_flags = AI_ADDRCONFIG;
 
   if(getaddrinfo(host, NULL, &hints, &results) != 0) {
+    freeaddrinfo(results);
     return 1;
   }
+
+  freeaddrinfo(results);
 
   return 0;
 }
