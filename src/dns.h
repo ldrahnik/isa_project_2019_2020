@@ -39,6 +39,8 @@
  */
 #define TYPE_AAAA         28
 
+#define MAX_RECEIVE_UDP_PACKET_LENGTH 65535
+
 /*
  * https://www.ietf.org/rfc/rfc1035.txt (4.1.1. Header section format) 
  * LE (Little Endian)
@@ -66,11 +68,25 @@ typedef struct dns_header
 /*
  * https://www.ietf.org/rfc/rfc1035.txt (4.1.2. Question section format)
  */
+// unsigned char *qname; (variable length)
 typedef struct dns_question
 {
     unsigned short qtype;
     unsigned short qclass;
 } DNS_Question;
+
+/*
+ * https://tools.ietf.org/html/rfc1035 (3.2.1. RR Definitions)
+ */
+// unsigned char *name; (variable length)
+typedef struct dns_rr_data
+{
+    uint16_t rtype;
+    uint16_t rclass;
+    int rttl;
+    uint16_t rdlength;
+    unsigned char* rdata;
+} DNS_RR_Data;
 
 void cleanAll(TParams params);
 int main(int argc, char *argv[]);

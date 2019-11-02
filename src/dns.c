@@ -25,6 +25,62 @@ void cleanAll(TParams params) {
    cleanParams(params);
 }
 
+
+/* 29/4/2009 - zdrojový kód - Silver Moon (m00n.silv3r@gmail.com) - https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/ */
+u_char* ReadName(unsigned char* reader,unsigned char* buffer,int* count)
+{
+    unsigned char *name;
+    unsigned int p=0,jumped=0,offset;
+    int i , j;
+ 
+    *count = 1;
+    name = (unsigned char*)malloc(256);
+ 
+    name[0]='\0';
+ 
+    //read the names in 3www6google3com format
+    while(*reader!=0)
+    {
+        if(*reader>=192)
+        {
+            offset = (*reader)*256 + *(reader+1) - 49152; //49152 = 11000000 00000000 ;)
+            reader = buffer + offset - 1;
+            jumped = 1; //we have jumped to another location so counting wont go up!
+        }
+        else
+        {
+            name[p++]=*reader;
+        }
+ 
+        reader = reader+1;
+ 
+        if(jumped==0)
+        {
+            *count = *count + 1; //if we havent jumped to another location then we can count up
+        }
+    }
+ 
+    name[p]='\0'; //string complete
+    if(jumped==1)
+    {
+        *count = *count + 1; //number of steps we actually moved forward in the packet
+    }
+ 
+    //now convert 3www6google3com0 to www.google.com
+    for(i=0;i<(int)strlen((const char*)name);i++) 
+    {
+        p=name[i];
+        for(j=0;j<(int)p;j++) 
+        {
+            name[i]=name[i+1];
+            i=i+1;
+        }
+        name[i]='.';
+    }
+    name[i-1]='\0'; //remove the last dot
+    return name;
+}
+
 /* www.fit.vutbr.cz -> 3www3fit5vutbr2cz */
 /* 29/4/2009 - zdrojový kód - Silver Moon (m00n.silv3r@gmail.com) - https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/ */
 /* 21.10.2019 - upraveno - Lukáš Drahník (xdrahn00@stud.fit.vutbr.cz) */
@@ -45,7 +101,6 @@ void convertNameToDNSFormat(unsigned char* host, unsigned char* dns)
             lock++;
         }
     }
-    *dns++='0';
     *dns++='\0';
 }
 
@@ -78,20 +133,20 @@ int dns(TParams params) {
   server_addr.sin_addr.s_addr = inet_addr(params.server);
 
   // create buffer
-  char* buffer = malloc(sizeof(DNS_Header) + (strlen((const char*)params.address) + 3) + sizeof(DNS_Question));
-  if(buffer == NULL) {
+  unsigned char* send_buffer = malloc(sizeof(DNS_Header) + (strlen((const char*)params.address) + 2) + sizeof(DNS_Question));
+  if(send_buffer == NULL) {
     fprintf(stderr, "Allocation fails.\n");
     cleanParams(params);
     return EALLOC;
   }
 
   // convert address to DNS format
-  unsigned char* qname = (unsigned char*)(buffer + sizeof(DNS_Header));
+  unsigned char* qname = (unsigned char*)(send_buffer + sizeof(DNS_Header));
   convertNameToDNSFormat((unsigned char*)params.address, qname);
 
   // header section
   // https://tools.ietf.org/html/rfc1035 (4.1.1. Header section format)
-  DNS_Header* dns_header = (DNS_Header*)buffer;
+  DNS_Header* dns_header = (DNS_Header*)send_buffer;
   dns_header->id = (uint16_t)htons(getpid());
   dns_header->qr = 0;
   dns_header->opcode = 0;
@@ -110,15 +165,15 @@ int dns(TParams params) {
 
   // question section
   // https://tools.ietf.org/html/rfc1035 (4.1.2. Question section format)
-  DNS_Question* dns_question = (DNS_Question*)(buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 3));
+  DNS_Question* dns_question = (DNS_Question*)(send_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 2));
   if(params.ipv6) {
-    dns_question->qtype = htons(TYPE_AAAA);
+    dns_question->qtype = 28; //htons(TYPE_AAAA); TODO:
   } else {
-    dns_question->qtype = htons(TYPE_A);
+    dns_question->qtype = 1; //htons(TYPE_A); TODO:
   }
-  dns_question->qclass = htons(CLASS_IN);
+  dns_question->qclass = 1; //htons(CLASS_IN); TODO:
 
-  if(sendto(s, (char*) buffer, sizeof(DNS_Header) + (strlen((const char*)qname) + 3) + sizeof(DNS_Question), 0, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
+  if(sendto(s, (char*) send_buffer, sizeof(DNS_Header) + (strlen((const char*)qname) + 2) + sizeof(DNS_Question), 0, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
   {
     perror("sendto()");
     return ESENDTO;
@@ -127,8 +182,9 @@ int dns(TParams params) {
      fprintf(stderr, "\nDEBUG: Packet has been sucessfully send.\n");
   }
 
-  int i = sizeof(server_addr);
-  if(recvfrom(s,(char*)buffer, 65535, 0, (struct sockaddr*)&server_addr, (socklen_t*)&i) < 0)
+  int ii = sizeof(server_addr);
+  unsigned char* receive_buffer = malloc(MAX_RECEIVE_UDP_PACKET_LENGTH);
+  if(recvfrom(s,(char*)receive_buffer, MAX_RECEIVE_UDP_PACKET_LENGTH, 0, (struct sockaddr*)&server_addr, (socklen_t*)&ii) < 0)
   {
       perror("recvfrom()");
       return ERECEIVEFROM;
@@ -137,15 +193,38 @@ int dns(TParams params) {
      fprintf(stderr, "\nDEBUG: Packet has been sucessfully received.\n");
   }
 
-  dns_header = (DNS_Header*) buffer;
+  DNS_Header* dns_receive_header = (DNS_Header*) receive_buffer;
+  unsigned char* reader = (receive_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 1) + sizeof(DNS_Question));
 
-  if(params.debug) {
-    printf("\n\nDEBUG: The response contains:\n");
-    printf("DEBUG: Question section: %d\n", ntohs(dns_header->qdcount));
-    printf("DEBUG: Answer section: %d\n", ntohs(dns_header->ancount));
-    printf("DEBUG: Authority records section: %d\n", ntohs(dns_header->nscount));
-    printf("DEBUG: Additional records section: %d\n\n", ntohs(dns_header->arcount));
+  int rname_length = 0;
+  printf("Authoritative: %s, Recursive: %s, Truncated: %s\n\n",
+    dns_receive_header->tc == 1 ? "Yes" : "No",
+    dns_receive_header->rd == 1 ? "Yes" : "No",
+    dns_receive_header->tc == 1 ? "Yes" : "No"
+  );
+
+  printf("Question section (%d):\n", ntohs(dns_receive_header->qdcount));
+  printf("Answer section (%d):\n", ntohs(dns_receive_header->ancount));
+
+  for(uint16_t i = 0; i < ntohs(dns_receive_header->ancount); i++)
+  {
+    unsigned char* rname = ReadName(reader, receive_buffer, &rname_length);
+ 
+    DNS_RR_Data* dns_rr_data = malloc(sizeof(DNS_RR_Data));
+    dns_rr_data = (DNS_RR_Data*)(reader + rname_length);
+    reader = reader + sizeof(DNS_RR_Data);
+ 
+    if(ntohs(dns_rr_data->rtype) == TYPE_A) //IPv4 address
+    {
+       printf("  %s, A, IN, %i\n", rname, ntohs(dns_rr_data->rttl));
+    }
   }
+  printf("Authority section (%d):\n", ntohs(dns_header->nscount));
+  printf("Additional section (%d):\n", ntohs(dns_header->arcount));
+
+  // clean
+  free(send_buffer);
+  free(receive_buffer);
 
   return ecode;
 }
@@ -173,6 +252,9 @@ int main(int argc, char *argv[]) {
     cleanParams(params);
     return ecode;
   }
+
+  // clean
+  cleanParams(params);
 
   return ecode;
 }
