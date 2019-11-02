@@ -22,14 +22,14 @@
 #include "error.h"
 
 typedef struct params {
-  int ecode; // error code
-  int show_help_message; // show help message
-  int debug; // debug
-  int recursion_desired; // option -r
-  int reverse_lookup; // option -x
-  int ipv6; // option -6
+  uint8_t ecode; // error code
+  uint16_t show_help_message :1; // show help message
+  uint16_t debug :1; // debug
+  uint16_t recursion_desired :1; // option -r
+  uint16_t reverse_lookup :1; // option -x
+  uint16_t ipv6 :1; // option -6
   char* server; // option -s server
-  int port; // option -p port
+  uint32_t port; // option -p port
   char* address; // non-option address
 } TParams;
 

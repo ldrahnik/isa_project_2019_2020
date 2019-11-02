@@ -108,11 +108,22 @@ void convertNameToDNSFormat(unsigned char* host, unsigned char* dns)
 int dns(TParams params) {
   int ecode = EOK;
 
+  // create buffer's
+  unsigned char* send_buffer = malloc(sizeof(DNS_Header) + (strlen((const char*)params.address) + 2) + sizeof(DNS_Question));
+  if(send_buffer == NULL) {
+    fprintf(stderr, "Allocation fails.\n");
+    return EALLOC;
+  }
+  unsigned char* receive_buffer = malloc(IP_MAXPACKET);
+  if(receive_buffer == NULL) {
+    fprintf(stderr, "Allocation fails.\n");
+    return EALLOC;
+  }
+
   // create socket
   int s;
   if((s = socket(AF_INET , SOCK_DGRAM , IPPROTO_UDP)) == -1) {
     fprintf(stderr, "Socket can not be created.\n");
-    cleanParams(params);
     return ESOCKET;
   }
 
@@ -132,14 +143,6 @@ int dns(TParams params) {
   server_addr.sin_addr = ((struct sockaddr_in*)server->ai_addr)->sin_addr;
   server_addr.sin_addr.s_addr = inet_addr(params.server);
 
-  // create buffer
-  unsigned char* send_buffer = malloc(sizeof(DNS_Header) + (strlen((const char*)params.address) + 2) + sizeof(DNS_Question));
-  if(send_buffer == NULL) {
-    fprintf(stderr, "Allocation fails.\n");
-    cleanParams(params);
-    return EALLOC;
-  }
-
   // convert address to DNS format
   unsigned char* qname = (unsigned char*)(send_buffer + sizeof(DNS_Header));
   convertNameToDNSFormat((unsigned char*)params.address, qname);
@@ -158,7 +161,7 @@ int dns(TParams params) {
   dns_header->z = 0;
   dns_header->rcode = 0;
 
-  dns_header->qdcount = htons(1);
+  dns_header->qdcount = (uint16_t)htons(1);
   dns_header->ancount = 0;
   dns_header->nscount = 0;
   dns_header->arcount = 0;
@@ -183,7 +186,6 @@ int dns(TParams params) {
   }
 
   int ii = sizeof(server_addr);
-  unsigned char* receive_buffer = malloc(IP_MAXPACKET);
   if(recvfrom(s,(char*)receive_buffer, IP_MAXPACKET, 0, (struct sockaddr*)&server_addr, (socklen_t*)&ii) < 0)
   {
       perror("recvfrom()");
@@ -199,9 +201,9 @@ int dns(TParams params) {
   int rname_length = 0;
   printf(
     "Authoritative: %s, Recursive: %s, Truncated: %s\n\n",
-    dns_receive_header->tc == 1 ? "Yes" : "No",
-    dns_receive_header->rd == 1 ? "Yes" : "No",
-    dns_receive_header->tc == 1 ? "Yes" : "No"
+    dns_receive_header->tc ? "Yes" : "No",
+    dns_receive_header->rd ? "Yes" : "No",
+    dns_receive_header->tc ? "Yes" : "No"
   );
 
   uint16_t i;
