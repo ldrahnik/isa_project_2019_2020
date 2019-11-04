@@ -143,13 +143,22 @@ TParams getParams(int argc, char *argv[]) {
     return params;
   }
 
-  params.address = malloc(strlen(argv[optind]) + 1);
+  // address - add last dot if not exists
+  uint16_t required_space_for_last_dot = 1;
+  if(argv[optind][strlen(argv[optind]) -1] == '.') {
+    required_space_for_last_dot = 0;
+  }
+
+  params.address = malloc(strlen(argv[optind]) + 1 + required_space_for_last_dot);
   if(params.address == NULL) {
     params.ecode = EALLOC;
 	fprintf(stderr, "Option error. Allocation fails.\n");
     return params;
   }
   strcpy(params.address, argv[optind]);
+  if(required_space_for_last_dot) {
+    strcat(params.address,".");
+  }
 
   return params;
 }

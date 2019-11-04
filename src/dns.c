@@ -88,7 +88,6 @@ void convertNameToDNSFormat(unsigned char* host, unsigned char* dns)
 {
     unsigned int lock = 0;
     unsigned int i;
-    strcat((char*)host,".");
 
     for(i = 0 ; i < strlen((char*)host) ; i++) 
     {
