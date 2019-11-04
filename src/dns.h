@@ -84,6 +84,7 @@ typedef struct dns_rr_data
 // unsigned char* rdata; (variable length)
 
 int main(int argc, char *argv[]);
+int dnsResolver(TParams params);
 int readHostFromResourceRecord(unsigned char* reader, unsigned char* buffer, unsigned char* host, uint32_t* host_length, int debug);
 void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* host, int debug);
 void convertHostToDNSFormat(unsigned char* host, unsigned char* dns_host_format, int debug);

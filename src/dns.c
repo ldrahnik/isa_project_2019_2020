@@ -135,8 +135,8 @@ void convertHostToDNSFormat(unsigned char* host, unsigned char* dns_host_format,
   }
 }
 
-/* handle process of dns request and response */
-int dns(TParams params) {
+/* handles process of dns request and response */
+int dnsResolver(TParams params) {
   int ecode = EOK;
 
   // create buffer's
@@ -322,7 +322,7 @@ int main(int argc, char *argv[]) {
   }
 
   // process dns
-  if((ecode = dns(params)) != 0) {
+  if((ecode = dnsResolver(params)) != 0) {
     cleanParams(params);
     return ecode;
   }
