@@ -31,29 +31,35 @@ void cleanAll(TParams params) {
  */
 int readHostFromResourceRecord(unsigned char* reader, unsigned char* buffer, unsigned char* host, uint32_t* host_length, int debug)
 {
-  uint32_t offset, pointer = 0;
-  unsigned char *name; 
+  uint32_t offset, jumped = 0, pointer = 0;
+  unsigned char *name;
   // https://tools.ietf.org/html/rfc1035 (2.3.4. Size limits)
   name = malloc(256);
   if(name == NULL) {
     fprintf(stderr, "Allocation fails.\n");
     return EALLOC;
   }
- 
-  while(*reader != 0) { // TODO:
-    if(*reader >= 192) {
+
+  while (*reader != 0) { // TODO:
+    if (*reader >= 192) {
       offset = (*reader)*256 + *(reader + 1) - 49152;
       reader = buffer + offset - 1;
+      jumped = 1;
     } else {
       name[pointer++] = *reader;
     }
-    reader = reader+1;
+
+    if(jumped == 0)
+      *host_length = *host_length + 1;
+
+    reader = reader + 1;
   }
  
   name[pointer]='\0';
- 
+  if(jumped == 1)
+    *host_length = *host_length + 1;
+
   convertHostFromDNSFormat(name, host, debug);
-  *host_length = strlen((char*)host);
 
   // clean
   free(name);
@@ -232,10 +238,16 @@ int dns(TParams params) {
     dns_receive_header->tc ? "Yes" : "No"
   );
 
-  uint32_t i, rname_length = 0;
+  uint32_t i, j, rname_length = 0;
   // https://tools.ietf.org/html/rfc1035 (2.3.4. Size limits)
   unsigned char* rname = malloc(256);
+  if(rname == NULL) {
+    fprintf(stderr, "Allocation fails.\n");
+    return EALLOC;
+  }
+  unsigned char* rdata;
   DNS_RR_Data* dns_rr_data;
+  unsigned char* dns_rr_data_rdata;
 
   printf("Question section (%d):\n", ntohs(dns_receive_header->qdcount));
   for(i = 0; i < ntohs(dns_receive_header->qdcount); i++)
@@ -244,11 +256,30 @@ int dns(TParams params) {
       fprintf(stderr, "Program could not read resource record.\n");
       return ecode;
     }
-    dns_rr_data = (DNS_RR_Data*)(dns_response_rr + rname_length);
- 
+    dns_rr_data = (DNS_RR_Data*)(dns_response_rr + rname_length + 1);
+    dns_rr_data_rdata = (unsigned char*)(dns_rr_data + sizeof(DNS_RR_Data));
+
     if(ntohs(dns_rr_data->rtype) == TYPE_A)
     {
-       printf("  %s, A, IN\n", rname);
+       rdata = (unsigned char*)malloc(ntohs(dns_rr_data->rdlength) + 1);
+       if(rdata == NULL) {
+         fprintf(stderr, "Allocation fails.\n");
+         return EALLOC;
+       }
+       for (j = 0; j < ntohs(dns_rr_data->rdlength); j++)
+         rdata[j] = dns_rr_data_rdata[j];
+ 
+       rdata[ntohs(dns_rr_data->rdlength)] = '\0';
+
+       printf("ttl: %i\n", ntohs(dns_rr_data->rttl)); // TODO:
+       printf("data length: %i\n", ntohs(dns_rr_data->rdlength)); // TODO:
+
+       struct sockaddr_in addr_in;
+       long *p;
+       p = (long*)rdata;
+       addr_in.sin_addr.s_addr = (*p);
+
+       printf("  %s, A, IN, %i, %s\n", rname, ntohs(dns_rr_data->rttl), inet_ntoa(addr_in.sin_addr));
     }
     else if(ntohs(dns_rr_data->rtype) == TYPE_AAAA)
     {
@@ -259,24 +290,13 @@ int dns(TParams params) {
   }
 
   printf("Answer section (%d):\n", ntohs(dns_receive_header->ancount));
-/*  for(i = 0; i < ntohs(dns_receive_header->ancount); i++)
-  {
-    rname = ReadName(reader, receive_buffer, &rname_length);
-    dns_rr_data = (DNS_RR_Data*)(reader + rname_length);
-
-    if(ntohs(dns_rr_data->rtype) == TYPE_A)
-    {
-       printf("  %s, A, IN, %i\n", rname, ntohs(dns_rr_data->rttl));
-    }
-
-    reader = reader + rname_length + sizeof(DNS_RR_Data);
-  }*/
   printf("Authority section (%d):\n", ntohs(dns_header->nscount));
   printf("Additional section (%d):\n", ntohs(dns_header->arcount));
 
   // clean
   freeaddrinfo(server);
   free(rname);
+  free(rdata);
   free(send_buffer);
   free(receive_buffer);
 

@@ -80,8 +80,8 @@ typedef struct dns_rr_data
     uint16_t rclass;
     int rttl;
     uint16_t rdlength;
-    unsigned char* rdata;
 } DNS_RR_Data;
+// unsigned char* rdata; (variable length)
 
 int main(int argc, char *argv[]);
 int readHostFromResourceRecord(unsigned char* reader, unsigned char* buffer, unsigned char* host, uint32_t* host_length, int debug);
