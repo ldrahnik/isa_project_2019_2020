@@ -25,7 +25,6 @@ void cleanAll(TParams params) {
    cleanParams(params);
 }
 
-
 /* 29/4/2009 - zdrojový kód - Silver Moon (m00n.silv3r@gmail.com) - https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/ */
 u_char* ReadName(unsigned char* reader,unsigned char* buffer,int* count)
 {
@@ -186,11 +185,11 @@ int dns(TParams params) {
   // https://tools.ietf.org/html/rfc1035 (4.1.2. Question section format)
   DNS_Question* dns_question = (DNS_Question*)(send_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 2));
   if(params.ipv6) {
-    dns_question->qtype = 28; //htons(TYPE_AAAA); TODO:
+    dns_question->qtype = TYPE_AAAA;
   } else {
-    dns_question->qtype = 1; //htons(TYPE_A); //TODO:
+    dns_question->qtype = TYPE_A;
   }
-  dns_question->qclass = 1; //htons(CLASS_IN); //TODO:
+  dns_question->qclass = CLASS_IN;
 
   if(sendto(s, (char*) send_buffer, sizeof(DNS_Header) + (strlen((const char*)qname) + 2) + sizeof(DNS_Question), 0, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
   {
