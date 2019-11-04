@@ -42,7 +42,7 @@ TParams getParams(int argc, char *argv[]) {
           return params;
 	    }
         params.show_help_message = 1;
- 	    break;
+ 	    return params;
       case 'd':
         if(params.debug) {
 	      fprintf(stderr, "Option -d is already used.\n");
