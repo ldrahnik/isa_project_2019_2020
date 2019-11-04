@@ -81,34 +81,43 @@ u_char* ReadName(unsigned char* reader,unsigned char* buffer,int* count)
     return name;
 }
 
-/* www.fit.vutbr.cz. -> 3www3fit5vutbr2cz */
+/* www.fit.vutbr.cz. -> 3www3fit5vutbr2cz0 */
 /* if is last dot missing is added during params procesing */
-/* 29/4/2009 - zdrojový kód - Silver Moon (m00n.silv3r@gmail.com) - https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/ */
-/* 21.10.2019 - upraveno - Lukáš Drahník (xdrahn00@stud.fit.vutbr.cz) */
 void convertNameToDNSFormat(unsigned char* host, unsigned char* dns_host_format, int debug) 
 {
-    uint32_t i, last_dot_index = 0;
+  uint32_t i, j, last_dot_index = 0;
 
-    if(debug)
-        fprintf(stderr, "DEBUG: given host: `%s`\n", host);
+  if(debug)
+    fprintf(stderr, "DEBUG: given host: `%s`\n", host);
 
-    for(i = 0; i < strlen((char*)host); i++) 
+  for(i = 0; i < strlen((char*)host); i++) {
+    if(debug)   
+      fprintf(stderr, "DEBUG: given host char: `%c`\n", host[i]);
+
+    if(host[i] == '.')
     {
-        if(host[i] == '.')
-        {
-            *dns_host_format++ = i - last_dot_index;
+      if(debug)
+        fprintf(stderr, "DEBUG: `%i` count of characters before dot on position: `%i`\n", i - last_dot_index, i);
 
-            for(;last_dot_index < i; last_dot_index++){
-                *dns_host_format++ = host[last_dot_index];
-            }
+      *dns_host_format++ = i - last_dot_index;
 
-            last_dot_index = i + 1;
-        }
+      for(j = last_dot_index; j < i; j++) {
+        *dns_host_format++ = host[j];
+ 
+        if(debug)
+          fprintf(stderr, "DEBUG: `%c`\n", host[j]);
+      }
+
+      last_dot_index = i + 1;
     }
-    *dns_host_format++='\0';
+  }
 
-    if(debug)
-        fprintf(stderr,"DEBUG: given host translated to DNS format: `%s`\n", dns_host_format); // TODO:
+  if(debug) {
+    fprintf(stderr, "DEBUG: `%c`\n", '0');
+    fprintf(stderr, "DEBUG: `%c`\n", '\0');
+  }
+  *dns_host_format++ = 0;
+  *dns_host_format++='\0';
 }
 
 /* handle process of dns request and response */
