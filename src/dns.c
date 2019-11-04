@@ -81,7 +81,7 @@ u_char* ReadName(unsigned char* reader,unsigned char* buffer,int* count)
     return name;
 }
 
-/* www.fit.vutbr.cz. -> 3www3fit5vutbr2cz0 */
+/* converts www.fit.vutbr.cz. -> 3www3fit5vutbr2cz0 */
 /* if is last dot missing is added during params procesing */
 void convertNameToDNSFormat(unsigned char* host, unsigned char* dns_host_format, int debug) 
 {
