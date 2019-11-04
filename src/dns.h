@@ -23,22 +23,18 @@
 /*
  * https://www.ietf.org/rfc/rfc1035.txt (3.2.4. CLASS values)
  */
-#define CLASS_IN 1 
+#define CLASS_IN        1 
 
 /*
  * https://www.ietf.org/rfc/rfc1035.txt (3.2.2. TYPE values)
  */
-#define TYPE_PTR 12
-
-/*
- * https://www.ietf.org/rfc/rfc1035.txt (3.2.2. TYPE values)
- */
-#define TYPE_A 1
+#define TYPE_A          1
+#define TYPE_PTR        12
 
 /*
  * https://tools.ietf.org/html/rfc3596#section-2.1 (2.1 AAAA record type)
  */
-#define TYPE_AAAA 28
+#define TYPE_AAAA       28
 
 /*
  * https://www.ietf.org/rfc/rfc1035.txt (4.1.1. Header section format) 
@@ -87,7 +83,10 @@ typedef struct dns_rr_data
     unsigned char* rdata;
 } DNS_RR_Data;
 
-void cleanAll(TParams params);
 int main(int argc, char *argv[]);
+int readHostFromResourceRecord(unsigned char* reader, unsigned char* buffer, unsigned char* host, uint32_t* host_length, int debug);
+void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* host, int debug);
+void convertHostToDNSFormat(unsigned char* host, unsigned char* dns_host_format, int debug);
+void cleanAll(TParams params);
 
 #endif

@@ -122,6 +122,26 @@ TParams getParams(int argc, char *argv[]) {
     return params;
   }
 
+  // combination of -x and -6 is not allowed
+  if(params.reverse_lookup && params.ipv6) {
+    fprintf(stderr, "Option error. Type in DNS question can not be at the same time PTR (-x) and AAAA (-6). Please remove one of mentioned types.\n");
+    params.ecode = EOPT;
+    return params;
+  }
+
+  // reverse given ip address
+  if(params.reverse_lookup) {
+    if(isIPv4VersionAddress(params.address)) {
+      //params.address = reverseIpv4(params.address.c_str()) + ".in-addr.arpa"; TODO:
+    } else if(isIPv6VersionAddress(params.address)) {
+      //params.address = reverseIpv6(params.address.c_str()) + "ip6.arpa"; TODO:
+    } else {
+      fprintf(stderr, "Option error. Address is not valid.\n");
+      params.ecode = EOPT;
+      return params;
+    }
+  }
+
   // server is required
   if(params.server == NULL) {
     fprintf(stderr, "Option error. Server is required.\n");
@@ -130,7 +150,7 @@ TParams getParams(int argc, char *argv[]) {
   }
 
   // validate given server
-  if(isValidHost(params.server) != 0) {
+  if(isHostValid(params.server) != 0) {
     fprintf(stderr, "Option error. Given server is not valid.\n");
     params.ecode = EOPT;
     return params;
@@ -163,7 +183,34 @@ TParams getParams(int argc, char *argv[]) {
   return params;
 }
 
-int isValidHost(char* host) {
+/* check if type of given ip address is IPv4 or not */
+int isIPv4VersionAddress(char *ip_address) {
+  char buffer[INET_ADDRSTRLEN];
+
+  if(inet_pton(AF_INET, ip_address, buffer))
+    return 1;
+
+  return 0;
+}
+
+/* check if type of given ip address is IPv6 or not */
+int isIPv6VersionAddress(char *ip_address) {
+  char buffer[INET6_ADDRSTRLEN];
+
+  if(inet_pton(AF_INET6, ip_address, buffer))
+    return 1;
+
+  return 0;
+}
+
+/* TODO: */
+//char* reverseIPv6Address(char* address)
+
+/* TODO: */
+//char* reverseIPv4Address(char *address, char* reversed_address)
+
+/* check if host exists in the internet */
+int isHostValid(char* node) {
   struct addrinfo hints;
   struct addrinfo* results;
 
@@ -173,16 +220,16 @@ int isValidHost(char* host) {
   hints.ai_protocol = 0;
   hints.ai_flags = AI_ADDRCONFIG;
 
-  if(getaddrinfo(host, NULL, &hints, &results) != 0) {
+  if(getaddrinfo(node, NULL, &hints, &results) != 0) {
     freeaddrinfo(results);
     return 1;
   }
 
   freeaddrinfo(results);
-
   return 0;
 }
 
+/* clean */
 void cleanParams(TParams params) {
    free(params.server);
    free(params.address);

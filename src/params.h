@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 
 #include "error.h"
 
@@ -34,7 +35,9 @@ typedef struct params {
 } TParams;
 
 TParams getParams(int argc, char *argv[]);
-int isValidHost(char* host);
+int isHostValid(char* node);
+int isIPv4VersionAddress(char *ip_address);
+int isIPv6VersionAddress(char *ip_address);
 void cleanParams(TParams params);
 
 #endif

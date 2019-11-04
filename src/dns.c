@@ -25,98 +25,108 @@ void cleanAll(TParams params) {
    cleanParams(params);
 }
 
-/* 29/4/2009 - zdrojový kód - Silver Moon (m00n.silv3r@gmail.com) - https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/ */
-u_char* ReadName(unsigned char* reader,unsigned char* buffer,int* count)
+/*
+ * read host name with variable length, convert from dns format and returns including length
+ * https://tools.ietf.org/html/rfc1035 (3.2. RR definitions)
+ */
+int readHostFromResourceRecord(unsigned char* reader, unsigned char* buffer, unsigned char* host, uint32_t* host_length, int debug)
 {
-    unsigned char *name;
-    unsigned int p=0,jumped=0,offset;
-    int i , j;
+  uint32_t offset, pointer = 0;
+  unsigned char *name; 
+  // https://tools.ietf.org/html/rfc1035 (2.3.4. Size limits)
+  name = malloc(256);
+  if(name == NULL) {
+    fprintf(stderr, "Allocation fails.\n");
+    return EALLOC;
+  }
  
-    *count = 1;
-    name = (unsigned char*)malloc(256);
- 
-    name[0]='\0';
- 
-    //read the names in 3www6google3com format
-    while(*reader!=0)
-    {
-        if(*reader>=192)
-        {
-            offset = (*reader)*256 + *(reader+1) - 49152; //49152 = 11000000 00000000 ;)
-            reader = buffer + offset - 1;
-            jumped = 1; //we have jumped to another location so counting wont go up!
-        }
-        else
-        {
-            name[p++]=*reader;
-        }
- 
-        reader = reader+1;
- 
-        if(jumped==0)
-        {
-            *count = *count + 1; //if we havent jumped to another location then we can count up
-        }
+  while(*reader != 0) { // TODO:
+    if(*reader >= 192) {
+      offset = (*reader)*256 + *(reader + 1) - 49152;
+      reader = buffer + offset - 1;
+    } else {
+      name[pointer++] = *reader;
     }
+    reader = reader+1;
+  }
  
-    name[p]='\0'; //string complete
-    if(jumped==1)
-    {
-        *count = *count + 1; //number of steps we actually moved forward in the packet
-    }
+  name[pointer]='\0';
  
-    //now convert 3www6google3com0 to www.google.com
-    for(i=0;i<(int)strlen((const char*)name);i++) 
-    {
-        p=name[i];
-        for(j=0;j<(int)p;j++) 
-        {
-            name[i]=name[i+1];
-            i=i+1;
-        }
-        name[i]='.';
-    }
-    name[i-1]='\0'; //remove the last dot
-    return name;
+  convertHostFromDNSFormat(name, host, debug);
+  *host_length = strlen((char*)host);
+
+  // clean
+  free(name);
+
+  return EOK;
 }
 
-/* converts www.fit.vutbr.cz. -> 3www3fit5vutbr2cz0 */
-/* if is last dot missing is added during params procesing */
-void convertNameToDNSFormat(unsigned char* host, unsigned char* dns_host_format, int debug) 
-{
+/* converts 3www3fit5vutbr2cz0 -> www.fit.vutbr.cz */
+void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* host, int debug) {
+  uint32_t i, j, last_number_index = 0;
+
+  if(debug)
+    fprintf(stderr, "DEBUG: convertHostFromDNSFormat() given host in dns format: `%s`\n", dns_host_format);
+
+  for(i = 0; i < strlen((char*)dns_host_format); i++) {
+    last_number_index = dns_host_format[i];
+
+    for(j = 0; j < (uint32_t)last_number_index; j++)
+    {
+       host[i] = dns_host_format[i + 1];
+       i++;
+    }
+    host[i] = '.';
+  }
+
+  if(i > 0)
+    host[i - 1] = '\0';
+  else
+    host[0] = '\0';
+
+  if(debug)
+    fprintf(stderr, "DEBUG: convertHostFromDNSFormat() given host: `%s`\n", host);
+
+}
+
+/* 
+ * converts www.fit.vutbr.cz. -> 3www3fit5vutbr2cz0
+ * if is last dot missing is added during params procesing
+ * https://tools.ietf.org/html/rfc1035 (4.1.2. Question section format)
+ */
+void convertHostToDNSFormat(unsigned char* host, unsigned char* dns_host_format, int debug) {
   uint32_t i, j, last_dot_index = 0;
 
   if(debug)
-    fprintf(stderr, "DEBUG: given host: `%s`\n", host);
+    fprintf(stderr, "DEBUG: convertHostToDNSFormat() given host: `%s`\n", host);
 
   for(i = 0; i < strlen((char*)host); i++) {
-    if(debug)   
-      fprintf(stderr, "DEBUG: given host char: `%c`\n", host[i]);
+    if(debug)
+      fprintf(stderr, "DEBUG: convertHostToDNSFormat() given host char: `%c`\n", host[i]);
 
     if(host[i] == '.')
     {
-      if(debug)
-        fprintf(stderr, "DEBUG: `%i` count of characters before dot on position: `%i`\n", i - last_dot_index, i);
-
       *dns_host_format++ = i - last_dot_index;
+
+      if(debug)
+        fprintf(stderr, "DEBUG: convertHostToDNSFormat() `%i` count of characters before dot on position: `%i`\n", i - last_dot_index, i);
 
       for(j = last_dot_index; j < i; j++) {
         *dns_host_format++ = host[j];
- 
         if(debug)
-          fprintf(stderr, "DEBUG: `%c`\n", host[j]);
+          fprintf(stderr, "DEBUG: convertHostToDNSFormat() `%c`\n", host[j]);
       }
-
       last_dot_index = i + 1;
     }
   }
 
-  if(debug) {
-    fprintf(stderr, "DEBUG: `%c`\n", '0');
-    fprintf(stderr, "DEBUG: `%c`\n", '\0');
-  }
   *dns_host_format++ = 0;
   *dns_host_format++='\0';
+
+  if(debug) {
+    fprintf(stderr, "DEBUG: convertHostToDNSFormat() `%c`\n", '0');
+    fprintf(stderr, "DEBUG: convertHostToDNSFormat() `%c`\n", '\0');
+  }
 }
 
 /* handle process of dns request and response */
@@ -160,7 +170,7 @@ int dns(TParams params) {
 
   // convert address to DNS format
   unsigned char* qname = (unsigned char*)(send_buffer + sizeof(DNS_Header));
-  convertNameToDNSFormat((unsigned char*)params.address, qname, params.debug);
+  convertHostToDNSFormat((unsigned char*)params.address, qname, params.debug);
 
   // header section
   // https://tools.ietf.org/html/rfc1035 (4.1.1. Header section format)
@@ -184,7 +194,9 @@ int dns(TParams params) {
   // question section
   // https://tools.ietf.org/html/rfc1035 (4.1.2. Question section format)
   DNS_Question* dns_question = (DNS_Question*)(send_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 2));
-  if(params.ipv6) {
+  if(params.reverse_lookup) {
+        dns_question->qtype = TYPE_PTR;
+  } else if(params.ipv6) {
     dns_question->qtype = TYPE_AAAA;
   } else {
     dns_question->qtype = TYPE_A;
@@ -197,7 +209,7 @@ int dns(TParams params) {
     return ESENDTO;
   }
   if(params.debug) {
-     fprintf(stderr, "\nDEBUG: Packet has been sucessfully send.\n");
+     fprintf(stderr, "\nDEBUG: dns() Packet has been sucessfully send.\n");
   }
 
   int ii = sizeof(server_addr);
@@ -207,13 +219,12 @@ int dns(TParams params) {
       return ERECEIVEFROM;
   }
   if(params.debug) {
-     fprintf(stderr, "\nDEBUG: Packet has been sucessfully received.\n");
+     fprintf(stderr, "\nDEBUG: dns() Packet has been sucessfully received.\n");
   }
 
   DNS_Header* dns_receive_header = (DNS_Header*) receive_buffer;
-  unsigned char* reader = (receive_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 1) + sizeof(DNS_Question));
+  unsigned char* dns_response_rr = (receive_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 1) + sizeof(DNS_Question));
 
-  int rname_length = 0;
   printf(
     "Authoritative: %s, Recursive: %s, Truncated: %s\n\n",
     dns_receive_header->tc ? "Yes" : "No",
@@ -221,22 +232,30 @@ int dns(TParams params) {
     dns_receive_header->tc ? "Yes" : "No"
   );
 
-  uint16_t i;
-  unsigned char* rname;
+  uint32_t i, rname_length = 0;
+  // https://tools.ietf.org/html/rfc1035 (2.3.4. Size limits)
+  unsigned char* rname = malloc(256);
   DNS_RR_Data* dns_rr_data;
 
   printf("Question section (%d):\n", ntohs(dns_receive_header->qdcount));
   for(i = 0; i < ntohs(dns_receive_header->qdcount); i++)
   {
-    rname = ReadName(reader, receive_buffer, &rname_length);
-    dns_rr_data = (DNS_RR_Data*)(reader + rname_length);
+    if((ecode = readHostFromResourceRecord(dns_response_rr, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
+      fprintf(stderr, "Program could not read resource record.\n");
+      return ecode;
+    }
+    dns_rr_data = (DNS_RR_Data*)(dns_response_rr + rname_length);
  
     if(ntohs(dns_rr_data->rtype) == TYPE_A)
     {
        printf("  %s, A, IN\n", rname);
     }
+    else if(ntohs(dns_rr_data->rtype) == TYPE_AAAA)
+    {
+       // printf("  %s, AAAA, IN, %s\n", rname, dns_rr_data->rdata); TODO:
+    }
 
-    reader = (reader + rname_length + sizeof(DNS_RR_Data));
+    dns_response_rr = (dns_response_rr + rname_length + sizeof(DNS_RR_Data));
   }
 
   printf("Answer section (%d):\n", ntohs(dns_receive_header->ancount));
