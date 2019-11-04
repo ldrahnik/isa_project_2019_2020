@@ -84,23 +84,30 @@ u_char* ReadName(unsigned char* reader,unsigned char* buffer,int* count)
 /* www.fit.vutbr.cz -> 3www3fit5vutbr2cz */
 /* 29/4/2009 - zdrojový kód - Silver Moon (m00n.silv3r@gmail.com) - https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/ */
 /* 21.10.2019 - upraveno - Lukáš Drahník (xdrahn00@stud.fit.vutbr.cz) */
-void convertNameToDNSFormat(unsigned char* host, unsigned char* dns) 
+void convertNameToDNSFormat(unsigned char* host, unsigned char* dns, int debug) 
 {
-    unsigned int lock = 0;
-    unsigned int i;
+    uint32_t i, lock = 0;
+
+    if(debug)
+        fprintf(stderr, "DEBUG: given host: `%s`\n", host);
 
     for(i = 0 ; i < strlen((char*)host) ; i++) 
     {
         if(host[i]=='.')
         {
             *dns++ = i-lock;
-            for(;lock<i;lock++)
+
+            for(;lock<i;lock++){
                 *dns++=host[lock];
+            }
 
             lock++;
         }
     }
     *dns++='\0';
+
+    if(debug)
+        fprintf(stderr,"DEBUG: given host translated to DNS format: `%s`\n", dns);
 }
 
 /* handle process of dns request and response */
@@ -144,7 +151,7 @@ int dns(TParams params) {
 
   // convert address to DNS format
   unsigned char* qname = (unsigned char*)(send_buffer + sizeof(DNS_Header));
-  convertNameToDNSFormat((unsigned char*)params.address, qname);
+  convertNameToDNSFormat((unsigned char*)params.address, qname, params.debug);
 
   // header section
   // https://tools.ietf.org/html/rfc1035 (4.1.1. Header section format)
