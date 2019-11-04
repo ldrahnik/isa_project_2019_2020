@@ -89,5 +89,6 @@ int readHostFromResourceRecord(unsigned char* reader, unsigned char* buffer, uns
 void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* host, int debug);
 void convertHostToDNSFormat(unsigned char* host, unsigned char* dns_host_format, int debug);
 void cleanAll(TParams params);
+void cleanDNSResources(struct addrinfo* server, unsigned char* rname, unsigned char* rdata, unsigned char* send_buffer, unsigned char* receive_buffer);
 
 #endif

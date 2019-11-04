@@ -20,7 +20,7 @@ const char *HELP_MSG = {
   "address: requested address.\n"
 };
 
-/* clean */
+/* clean entire TParams structure */
 void cleanAll(TParams params) {
    cleanParams(params);
 }
@@ -139,13 +139,20 @@ void convertHostToDNSFormat(unsigned char* host, unsigned char* dns_host_format,
 int dnsResolver(TParams params) {
   int ecode = EOK;
 
+  // allocated variables
+  struct addrinfo *server = NULL;
+  unsigned char* send_buffer = NULL;
+  unsigned char* receive_buffer = NULL;
+  unsigned char* rname = NULL;
+  unsigned char* rdata = NULL;
+
   // create buffer's
-  unsigned char* send_buffer = malloc(sizeof(DNS_Header) + (strlen((const char*)params.address) + 2) + sizeof(DNS_Question));
+  send_buffer = malloc(sizeof(DNS_Header) + (strlen((const char*)params.address) + 2) + sizeof(DNS_Question));
   if(send_buffer == NULL) {
     fprintf(stderr, "Allocation fails.\n");
     return EALLOC;
   }
-  unsigned char* receive_buffer = malloc(IP_MAXPACKET);
+  receive_buffer = malloc(IP_MAXPACKET);
   if(receive_buffer == NULL) {
     fprintf(stderr, "Allocation fails.\n");
     return EALLOC;
@@ -160,7 +167,6 @@ int dnsResolver(TParams params) {
 
   // server address
   struct addrinfo hints;
-  struct addrinfo *server;
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_DGRAM;
@@ -240,12 +246,12 @@ int dnsResolver(TParams params) {
 
   uint32_t i, j, rname_length = 0;
   // https://tools.ietf.org/html/rfc1035 (2.3.4. Size limits)
-  unsigned char* rname = malloc(256);
+  rname = malloc(256);
   if(rname == NULL) {
     fprintf(stderr, "Allocation fails.\n");
     return EALLOC;
   }
-  unsigned char* rdata;
+
   DNS_RR_Data* dns_rr_data;
   unsigned char* dns_rr_data_rdata;
 
@@ -254,6 +260,7 @@ int dnsResolver(TParams params) {
   {
     if((ecode = readHostFromResourceRecord(dns_response_rr, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
       fprintf(stderr, "Program could not read resource record.\n");
+      cleanDNSResources(server, rname, rdata, send_buffer, receive_buffer);
       return ecode;
     }
     dns_rr_data = (DNS_RR_Data*)(dns_response_rr + rname_length + 1);
@@ -264,6 +271,7 @@ int dnsResolver(TParams params) {
        rdata = (unsigned char*)malloc(ntohs(dns_rr_data->rdlength) + 1);
        if(rdata == NULL) {
          fprintf(stderr, "Allocation fails.\n");
+         cleanDNSResources(server, rname, rdata, send_buffer, receive_buffer);
          return EALLOC;
        }
        for (j = 0; j < ntohs(dns_rr_data->rdlength); j++)
@@ -294,13 +302,23 @@ int dnsResolver(TParams params) {
   printf("Additional section (%d):\n", ntohs(dns_header->arcount));
 
   // clean
-  freeaddrinfo(server);
-  free(rname);
-  free(rdata);
-  free(send_buffer);
-  free(receive_buffer);
+  cleanDNSResources(server, rname, rdata, send_buffer, receive_buffer);
 
   return ecode;
+}
+
+/* clean all variables allocated inside function dns */
+void cleanDNSResources(struct addrinfo* server, unsigned char* rname, unsigned char* rdata, unsigned char* send_buffer, unsigned char* receive_buffer) {
+  if(server != NULL)
+    freeaddrinfo(server);
+  if(rname != NULL)
+    free(rname);
+  if(rdata != NULL)
+    free(rdata);
+  if(send_buffer != NULL)
+    free(send_buffer);
+  if(receive_buffer != NULL)
+    free(receive_buffer);
 }
 
 /* main */
