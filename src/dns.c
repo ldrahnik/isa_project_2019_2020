@@ -335,7 +335,7 @@ int dnsResolver(TParams params) {
       }
       else if(ntohs(dns_rr_data->rtype) == TYPE_AAAA)
       {
-        // printf("  %s, AAAA, IN, %s\n", rname, dns_rr_data->rdata); TODO:
+        // TODO:
       }
       free(rdata);
     }
