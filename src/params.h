@@ -22,6 +22,9 @@
 
 #include "error.h"
 
+#define IP6_ARPA_TERMINATION "ip6.arpa." 
+#define IP4_ARPA_TERMINATION "ip4.arpa."
+
 typedef struct params {
   uint8_t ecode; // error code
   uint16_t show_help_message :1; // show help message
@@ -38,6 +41,9 @@ TParams getParams(int argc, char *argv[]);
 int isHostValid(char* node);
 int isIPv4VersionAddress(char *ip_address);
 int isIPv6VersionAddress(char *ip_address);
+int convertIPv6ToARPAFormat(char* address, char* address_arpa_format, int debug);
+int convertIPv4ToARPAFormat(char* address, char* address_arpa_format, int debug);
+void convertHostToDNSFormat(unsigned char* host, unsigned char* dns_host_format, int debug);
 void cleanParams(TParams params);
 
 #endif

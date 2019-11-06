@@ -92,7 +92,6 @@ void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* hos
 
   if(debug)
     fprintf(stderr, "DEBUG: convertHostFromDNSFormat() given host: `%s`\n", host);
-
 }
 
 /* 
@@ -147,7 +146,7 @@ int dnsResolver(TParams params) {
   unsigned char* rdata = NULL;
 
   // create buffer's
-  send_buffer = malloc(sizeof(DNS_Header) + (strlen((const char*)params.address) + 2) + sizeof(DNS_Question));
+  send_buffer = malloc(sizeof(DNS_Header) + (strlen((const char*)params.address) + 1) + sizeof(DNS_Question));
   if(send_buffer == NULL) {
     fprintf(stderr, "Allocation fails.\n");
     return EALLOC;
@@ -180,7 +179,7 @@ int dnsResolver(TParams params) {
   server_addr.sin_addr = ((struct sockaddr_in*)server->ai_addr)->sin_addr;
   server_addr.sin_addr.s_addr = inet_addr(params.server);
 
-  // convert address to DNS format
+  // add address
   unsigned char* qname = (unsigned char*)(send_buffer + sizeof(DNS_Header));
   convertHostToDNSFormat((unsigned char*)params.address, qname, params.debug);
 
@@ -207,7 +206,7 @@ int dnsResolver(TParams params) {
   // https://tools.ietf.org/html/rfc1035 (4.1.2. Question section format)
   DNS_Question* dns_question = (DNS_Question*)(send_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 2));
   if(params.reverse_lookup) {
-        dns_question->qtype = TYPE_PTR;
+    dns_question->qtype = TYPE_PTR;
   } else if(params.ipv6) {
     dns_question->qtype = TYPE_AAAA;
   } else {

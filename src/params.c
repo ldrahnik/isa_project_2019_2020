@@ -129,19 +129,6 @@ TParams getParams(int argc, char *argv[]) {
     return params;
   }
 
-  // reverse given ip address
-  if(params.reverse_lookup) {
-    if(isIPv4VersionAddress(params.address)) {
-      //params.address = reverseIpv4(params.address.c_str()) + ".in-addr.arpa"; TODO:
-    } else if(isIPv6VersionAddress(params.address)) {
-      //params.address = reverseIpv6(params.address.c_str()) + "ip6.arpa"; TODO:
-    } else {
-      fprintf(stderr, "Option error. Address is not valid.\n");
-      params.ecode = EOPT;
-      return params;
-    }
-  }
-
   // server is required
   if(params.server == NULL) {
     fprintf(stderr, "Option error. Server is required.\n");
@@ -163,21 +150,57 @@ TParams getParams(int argc, char *argv[]) {
     return params;
   }
 
-  // address - add last dot if not exists
-  uint16_t required_space_for_last_dot = 1;
-  if(argv[optind][strlen(argv[optind]) -1] == '.') {
-    required_space_for_last_dot = 0;
-  }
+  // translate given ip address to ARPA format
+  if(params.reverse_lookup) {
+    /* https://tools.ietf.org/html/rfc1035 (3.5. IN-ADDR.ARPA domain) */
+    if(isIPv4VersionAddress(argv[optind])) {
+      params.address = malloc(strlen(argv[optind]) + 1 + strlen(IP4_ARPA_TERMINATION));
+      if(params.address == NULL) {
+        params.ecode = EALLOC;
+        fprintf(stderr, "Option error. Allocation fails.\n");
+        return params;
+      }
+      if(convertIPv4ToARPAFormat(argv[optind], params.address, params.debug) != EOK) {
+        fprintf(stderr, "Option error. Address is not valid.\n");
+        params.ecode = EOPT;
+        return params;
+      }
+    /* https://tools.ietf.org/html/rfc3596#section-2.5 (2.5 IP6.ARPA Domain) */
+    } else if(isIPv6VersionAddress(argv[optind])) {
+      params.address = malloc(strlen(argv[optind]) + 1 + strlen(IP6_ARPA_TERMINATION));
+      if(params.address == NULL) {
+        params.ecode = EALLOC;
+        fprintf(stderr, "Option error. Allocation fails.\n");
+        return params;
+      }
+      if(convertIPv6ToARPAFormat(argv[optind], params.address, params.debug) != EOK) {
+        fprintf(stderr, "Option error. Address is not valid.\n");
+        params.ecode = EOPT;
+        return params;
+      }
+    } else {
+      fprintf(stderr, "Option error. Address is not valid.\n");
+      params.ecode = EOPT;
+      return params;
+    }
+  // or host
+  } else {
+    // add last dot if not exists
+    uint16_t required_space_for_last_dot = 1;
+    if(argv[optind][strlen(argv[optind]) - 1] == '.') {
+      required_space_for_last_dot = 0;
+    }
 
-  params.address = malloc(strlen(argv[optind]) + 1 + required_space_for_last_dot);
-  if(params.address == NULL) {
-    params.ecode = EALLOC;
-	fprintf(stderr, "Option error. Allocation fails.\n");
-    return params;
-  }
-  strcpy(params.address, argv[optind]);
-  if(required_space_for_last_dot) {
-    strcat(params.address,".");
+    params.address = malloc(strlen(argv[optind]) + 1 + required_space_for_last_dot);
+    if(params.address == NULL) {
+      params.ecode = EALLOC;
+      fprintf(stderr, "Option error. Allocation fails.\n");
+      return params;
+    }
+    strcpy(params.address, argv[optind]);
+    if(required_space_for_last_dot) {
+      strcat(params.address,".");
+    }
   }
 
   return params;
@@ -203,11 +226,79 @@ int isIPv6VersionAddress(char *ip_address) {
   return 0;
 }
 
-/* TODO: */
-//char* reverseIPv6Address(char* address)
+/* 4321:0:1:2:3:4:567:89ab -> b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.0.0.0.0.1.2.3.4.IP6.ARPA. */
+/* https://tools.ietf.org/html/rfc3596#section-2.5 (2.5 IP6.ARPA Domain) */
+int convertIPv6ToARPAFormat(char* address, char* address_arpa_format, int debug) {
+  struct in6_addr in6_address; 
+  uint16_t i; uint8_t arpa_format_length_without_termination = INET6_ADDRSTRLEN + 20 + strlen(IP6_ARPA_TERMINATION) + 1;
+  char buffer[arpa_format_length_without_termination];
 
-/* TODO: */
-//char* reverseIPv4Address(char *address, char* reversed_address)
+  inet_pton(AF_INET6, address, &in6_address);
+
+  sprintf(buffer, "%02x%02x....%02x%02x....%02x%02x....%02x%02x....%02x%02x....%02x%02x....%02x%02x....%02x%02x....",
+    in6_address.s6_addr[15], in6_address.s6_addr[14],
+    in6_address.s6_addr[13], in6_address.s6_addr[12],
+    in6_address.s6_addr[11], in6_address.s6_addr[10],
+    in6_address.s6_addr[9], in6_address.s6_addr[8],
+    in6_address.s6_addr[7], in6_address.s6_addr[6],
+    in6_address.s6_addr[5], in6_address.s6_addr[4],
+    in6_address.s6_addr[3], in6_address.s6_addr[2],
+    in6_address.s6_addr[1], in6_address.s6_addr[0]
+  );
+
+  if(debug) {
+    fprintf(stderr, "DEBUG: convertIPv6ToARPAFormat() address after funcs inet_pton() without correct order and with dots: `%s`\n\n", buffer);
+  }
+
+  // for example: 9a08.... -> a.9.8.0. (is taken 8 characters every loop)
+  for(i = 0; i < arpa_format_length_without_termination; i = i + 8) {
+
+    // 9a08.... -> 9a088...
+    // 9a088... -> 9a0.8...
+    buffer[i + 4] = buffer[i + 3];
+    buffer[i + 3] = '.';
+
+    // 9a0.8... -> 9a0.8.0.
+    buffer[i + 6] = buffer[i + 2];
+
+    // 9a0.8.0. -> 9a9.8.0.
+    // 9a9.8.0. -> aa9.8.0.
+    // aa9.8.0. -> a.9.8.0.
+    buffer[i + 2] = buffer[i];
+    buffer[i] = buffer[i + 1];
+    buffer[i + 1] = '.';
+  }
+
+  if(debug) {
+    fprintf(stderr, "DEBUG: convertIPv6ToARPAFormat() address in arpa format (without termination string): `%s`\n\n", buffer);
+  }
+
+  strcat(buffer, IP6_ARPA_TERMINATION);
+
+  if(debug)
+    fprintf(stderr, "DEBUG: convertIPv6ToARPAFormat() address in arpa format: `%s`\n\n", buffer);
+
+  strcpy(address_arpa_format, buffer);
+  strcpy(address_arpa_format, "\0");
+
+  return EOK;
+}
+
+/* 147.229.8.12 -> 12.8.229.147 */
+/* https://tools.ietf.org/html/rfc1035 (3.5. IN-ADDR.ARPA domain) */
+int convertIPv4ToARPAFormat(char *address, char* address_arpa_format, int debug) {
+  in_addr_t in_address;
+
+  inet_pton(AF_INET, address, &in_address);
+  //+= ".in-addr.arpa"
+    //address;
+  //address_arpa_format = ;
+
+  if(debug)
+    fprintf(stderr, "DEBUG: convertIPv4ToARPAFormat() address in arpa format: `%s`\n", address_arpa_format);
+
+  return EOK;
+}
 
 /* check if host exists in the internet */
 int isHostValid(char* node) {
