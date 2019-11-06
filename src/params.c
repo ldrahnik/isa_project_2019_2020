@@ -154,7 +154,7 @@ TParams getParams(int argc, char *argv[]) {
   if(params.reverse_lookup) {
     /* https://tools.ietf.org/html/rfc1035 (3.5. IN-ADDR.ARPA domain) */
     if(isIPv4VersionAddress(argv[optind])) {
-      params.address = malloc(strlen(argv[optind]) + 1 + strlen(IP4_ARPA_TERMINATION));
+      params.address = malloc(INET_ADDRSTRLEN + strlen(IP4_ARPA_TERMINATION) + 1);
       if(params.address == NULL) {
         params.ecode = EALLOC;
         fprintf(stderr, "Option error. Allocation fails.\n");
@@ -167,7 +167,7 @@ TParams getParams(int argc, char *argv[]) {
       }
     /* https://tools.ietf.org/html/rfc3596#section-2.5 (2.5 IP6.ARPA Domain) */
     } else if(isIPv6VersionAddress(argv[optind])) {
-      params.address = malloc(strlen(argv[optind]) + 20 + strlen(IP6_ARPA_TERMINATION) + 1);
+      params.address = malloc(INET6_ADDRSTRLEN + 20 + strlen(IP6_ARPA_TERMINATION) + 1);
       if(params.address == NULL) {
         params.ecode = EALLOC;
         fprintf(stderr, "Option error. Allocation fails.\n");
@@ -186,7 +186,7 @@ TParams getParams(int argc, char *argv[]) {
   // or host
   } else {
     // add last dot if not exists
-    uint16_t required_space_for_last_dot = 1;
+    uint8_t required_space_for_last_dot = 1;
     if(argv[optind][strlen(argv[optind]) - 1] == '.') {
       required_space_for_last_dot = 0;
     }
@@ -289,7 +289,7 @@ int convertIPv6ToARPAFormat(char* address, char* address_arpa_format, int debug)
 /* https://tools.ietf.org/html/rfc1035 (3.5. IN-ADDR.ARPA domain) */
 int convertIPv4ToARPAFormat(char *address, char* address_arpa_format, int debug) {
   struct in_addr in_address;
-  uint8_t arpa_format_length = INET_ADDRSTRLEN + 1 + strlen(IP4_ARPA_TERMINATION) + 1;
+  uint8_t arpa_format_length = INET_ADDRSTRLEN + strlen(IP4_ARPA_TERMINATION) + 1;
   char buffer[arpa_format_length];
 
   inet_pton(AF_INET, address, &in_address);
@@ -312,7 +312,7 @@ int convertIPv4ToARPAFormat(char *address, char* address_arpa_format, int debug)
   strcat(buffer, IP4_ARPA_TERMINATION);
 
   if(debug)
-    fprintf(stderr, "DEBUG: convertIPv4ToARPAFormat() address in arpa format: `%s`\n", buffer);
+    fprintf(stderr, "DEBUG: convertIPv4ToARPAFormat() address in arpa format: `%s`, length: `%li`\n", buffer, strlen(buffer));
 
   strcpy(address_arpa_format, buffer);
   strcat(address_arpa_format, "\0");

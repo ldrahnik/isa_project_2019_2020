@@ -36,6 +36,12 @@
  */
 #define TYPE_AAAA       28
 
+
+/*
+ * https://tools.ietf.org/html/rfc1035 (2.3.4. Size limits)
+ */
+#define MAX_NAME_LENGTH 256
+
 /*
  * https://www.ietf.org/rfc/rfc1035.txt (4.1.1. Header section format) 
  * LE (Little Endian)
@@ -88,6 +94,6 @@ int dnsResolver(TParams params);
 int readHostFromResourceRecord(unsigned char* reader, unsigned char* buffer, unsigned char* host, uint32_t* host_length, int debug);
 void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* host, int debug);
 void cleanAll(TParams params);
-void cleanDNSResources(struct addrinfo* server, unsigned char* rname, unsigned char* rdata, unsigned char* send_buffer, unsigned char* receive_buffer);
+void cleanDNSResources(struct addrinfo* server, unsigned char* rname, unsigned char* send_buffer, unsigned char* receive_buffer);
 
 #endif
