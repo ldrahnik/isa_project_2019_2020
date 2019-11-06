@@ -167,7 +167,7 @@ TParams getParams(int argc, char *argv[]) {
       }
     /* https://tools.ietf.org/html/rfc3596#section-2.5 (2.5 IP6.ARPA Domain) */
     } else if(isIPv6VersionAddress(argv[optind])) {
-      params.address = malloc(strlen(argv[optind]) + 1 + strlen(IP6_ARPA_TERMINATION));
+      params.address = malloc(strlen(argv[optind]) + 20 + strlen(IP6_ARPA_TERMINATION) + 1);
       if(params.address == NULL) {
         params.ecode = EALLOC;
         fprintf(stderr, "Option error. Allocation fails.\n");
@@ -230,8 +230,9 @@ int isIPv6VersionAddress(char *ip_address) {
 /* https://tools.ietf.org/html/rfc3596#section-2.5 (2.5 IP6.ARPA Domain) */
 int convertIPv6ToARPAFormat(char* address, char* address_arpa_format, int debug) {
   struct in6_addr in6_address; 
-  uint16_t i; uint8_t arpa_format_length_without_termination = INET6_ADDRSTRLEN + 20 + strlen(IP6_ARPA_TERMINATION) + 1;
-  char buffer[arpa_format_length_without_termination];
+  uint16_t i; 
+  uint8_t arpa_format_length = INET6_ADDRSTRLEN + 20 + strlen(IP6_ARPA_TERMINATION) + 1;
+  char buffer[arpa_format_length];
 
   inet_pton(AF_INET6, address, &in6_address);
 
@@ -251,7 +252,7 @@ int convertIPv6ToARPAFormat(char* address, char* address_arpa_format, int debug)
   }
 
   // for example: 9a08.... -> a.9.8.0. (is taken 8 characters every loop)
-  for(i = 0; i < arpa_format_length_without_termination; i = i + 8) {
+  for(i = 0; i < arpa_format_length - strlen(IP6_ARPA_TERMINATION); i = i + 8) {
 
     // 9a08.... -> 9a088...
     // 9a088... -> 9a0.8...
