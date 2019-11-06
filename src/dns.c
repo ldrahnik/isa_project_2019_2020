@@ -181,7 +181,11 @@ int dnsResolver(TParams params) {
 
   // add address
   unsigned char* qname = (unsigned char*)(send_buffer + sizeof(DNS_Header));
-  convertHostToDNSFormat((unsigned char*)params.address, qname, params.debug);
+  if(params.reverse_lookup) {
+    strcpy((char*)qname, params.address);
+  } else {
+    convertHostToDNSFormat((unsigned char*)params.address, qname, params.debug);
+  }
 
   // header section
   // https://tools.ietf.org/html/rfc1035 (4.1.1. Header section format)

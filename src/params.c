@@ -288,15 +288,34 @@ int convertIPv6ToARPAFormat(char* address, char* address_arpa_format, int debug)
 /* 147.229.8.12 -> 12.8.229.147 */
 /* https://tools.ietf.org/html/rfc1035 (3.5. IN-ADDR.ARPA domain) */
 int convertIPv4ToARPAFormat(char *address, char* address_arpa_format, int debug) {
-  in_addr_t in_address;
+  struct in_addr in_address;
+  uint8_t arpa_format_length = INET_ADDRSTRLEN + 1 + strlen(IP4_ARPA_TERMINATION) + 1;
+  char buffer[arpa_format_length];
 
   inet_pton(AF_INET, address, &in_address);
-  //+= ".in-addr.arpa"
-    //address;
-  //address_arpa_format = ;
 
   if(debug)
-    fprintf(stderr, "DEBUG: convertIPv4ToARPAFormat() address in arpa format: `%s`\n", address_arpa_format);
+    fprintf(stderr, "DEBUG: convertIPv4ToARPAFormat() address after funcs inet_pton(): `%s`\n", inet_ntoa(in_address));
+
+  in_address.s_addr = 
+    ((in_address.s_addr & 0xff000000) >> 24) | ((in_address.s_addr & 0x00ff0000) >>  8) |
+    ((in_address.s_addr & 0x0000ff00) <<  8) | ((in_address.s_addr & 0x000000ff) << 24);
+
+  //buffer = inet_ntoa(in_address, buffer);
+  inet_ntop(AF_INET, &in_address, buffer, sizeof(buffer));
+
+  strcat(buffer, ".");
+
+  if(debug)
+    fprintf(stderr, "DEBUG: convertIPv4ToARPAFormat() address in arpa format (without termination string): `%s`\n", buffer);
+
+  strcat(buffer, IP4_ARPA_TERMINATION);
+
+  if(debug)
+    fprintf(stderr, "DEBUG: convertIPv4ToARPAFormat() address in arpa format: `%s`\n", buffer);
+
+  strcpy(address_arpa_format, buffer);
+  strcat(address_arpa_format, "\0");
 
   return EOK;
 }
