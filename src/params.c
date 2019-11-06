@@ -285,7 +285,7 @@ int convertIPv6ToARPAFormat(char* address, char* address_arpa_format, int debug)
   return EOK;
 }
 
-/* 147.229.8.12 -> 12.8.229.147 */
+/* 147.229.8.12 -> 12.8.229.147.IP4.ARPA. */
 /* https://tools.ietf.org/html/rfc1035 (3.5. IN-ADDR.ARPA domain) */
 int convertIPv4ToARPAFormat(char *address, char* address_arpa_format, int debug) {
   struct in_addr in_address;
