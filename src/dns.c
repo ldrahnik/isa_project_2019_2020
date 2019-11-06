@@ -275,6 +275,7 @@ int dnsResolver(TParams params) {
     rdata_length = ntohs(dns_rr_data->rdlength);
 
     if(params.debug) {
+      fprintf(stderr, "DEBUG: RR type: `%i`\n", ntohs(dns_rr_data->rtype));
       fprintf(stderr, "DEBUG: RR class: `%i`\n", ntohs(dns_rr_data->rclass));
       fprintf(stderr, "DEBUG: RR ttl: `%i`\n", ntohs(dns_rr_data->rttl));
       fprintf(stderr, "DEBUG: rdlength: %i\n", ntohs(dns_rr_data->rdlength));
@@ -304,39 +305,40 @@ int dnsResolver(TParams params) {
     dns_rr_data = (DNS_RR_Data*)(dns_response_rr + rname_length + 1);
     dns_rr_data_rdata = (unsigned char*)(dns_rr_data + sizeof(DNS_RR_Data));
 
-    if(ntohs(dns_rr_data->rtype) == TYPE_A)
-    {
-       rdata_length = ntohs(dns_rr_data->rdlength);
-       rdata = (unsigned char*)malloc(rdata_length + 1);
-       if(rdata == NULL) {
-         fprintf(stderr, "Allocation fails.\n");
-         cleanDNSResources(server, rname, send_buffer, receive_buffer);
-         return EALLOC;
-       }
-       for (j = 0; j < ntohs(dns_rr_data->rdlength); j++)
-         rdata[j] = dns_rr_data_rdata[j];
-       rdata[ntohs(dns_rr_data->rdlength)] = '\0';
-
-       if(params.debug) {
-         fprintf(stderr, "DEBUG: RR class: `%i`\n", ntohs(dns_rr_data->rclass));
-         fprintf(stderr, "DEBUG: RR ttl: `%i`\n", ntohs(dns_rr_data->rttl));
-         fprintf(stderr, "DEBUG: rdlength: %i\n", ntohs(dns_rr_data->rdlength));
-       }
-
-       struct sockaddr_in addr_in;
-       long *p;
-       p = (long*)rdata;
-       addr_in.sin_addr.s_addr = (*p);
-
-       printf("  %s, A, IN, %i, %s\n", rname, ntohs(dns_rr_data->rttl), inet_ntoa(addr_in.sin_addr));
-    }
-    else if(ntohs(dns_rr_data->rtype) == TYPE_AAAA)
-    {
-       // printf("  %s, AAAA, IN, %s\n", rname, dns_rr_data->rdata); TODO:
+    if(params.debug) {
+      fprintf(stderr, "DEBUG: RR type: `%i`\n", ntohs(dns_rr_data->rtype));
+      fprintf(stderr, "DEBUG: RR class: `%i`\n", ntohs(dns_rr_data->rclass));
+      fprintf(stderr, "DEBUG: RR ttl: `%i`\n", ntohs(dns_rr_data->rttl));
+      fprintf(stderr, "DEBUG: rdlength: %i\n", ntohs(dns_rr_data->rdlength));
     }
 
-    free(rdata);
+    if(ntohs(dns_rr_data->rclass) == CLASS_IN) {
+      if(ntohs(dns_rr_data->rtype) == TYPE_A)
+      {
+        rdata_length = ntohs(dns_rr_data->rdlength);
+        rdata = (unsigned char*)malloc(rdata_length + 1);
+        if(rdata == NULL) {
+          fprintf(stderr, "Allocation fails.\n");
+          cleanDNSResources(server, rname, send_buffer, receive_buffer);
+          return EALLOC;
+        }
+        for (j = 0; j < ntohs(dns_rr_data->rdlength); j++)
+          rdata[j] = dns_rr_data_rdata[j];
+        rdata[ntohs(dns_rr_data->rdlength)] = '\0';
 
+        struct sockaddr_in addr_in;
+        long *p;
+        p = (long*)rdata;
+        addr_in.sin_addr.s_addr = (*p);
+
+        printf("  %s, A, IN, %i, %s\n", rname, ntohs(dns_rr_data->rttl), inet_ntoa(addr_in.sin_addr));
+      }
+      else if(ntohs(dns_rr_data->rtype) == TYPE_AAAA)
+      {
+        // printf("  %s, AAAA, IN, %s\n", rname, dns_rr_data->rdata); TODO:
+      }
+      free(rdata);
+    }
     dns_response_rr = (dns_response_rr + rname_length + sizeof(DNS_RR_Data) + rdata_length);
   }
   printf("Authority section (%d):\n", ntohs(dns_header->nscount));

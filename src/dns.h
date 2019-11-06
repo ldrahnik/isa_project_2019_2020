@@ -36,7 +36,6 @@
  */
 #define TYPE_AAAA       28
 
-
 /*
  * https://tools.ietf.org/html/rfc1035 (2.3.4. Size limits)
  */
@@ -72,8 +71,8 @@ typedef struct dns_header
 // unsigned char *qname; (variable length)
 typedef struct dns_question
 {
-    unsigned short qtype;
-    unsigned short qclass;
+    uint16_t qtype;
+    uint16_t qclass;
 } DNS_Question;
 
 /*
