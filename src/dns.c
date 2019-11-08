@@ -177,10 +177,11 @@ int dnsResolver(TParams params) {
   getaddrinfo(params.server, NULL, &hints, &server);
 
   struct sockaddr_in server_addr;
+  memset(&server_addr, 0, sizeof(struct sockaddr_in));
+  server_addr.sin_addr = ((struct sockaddr_in*)server->ai_addr)->sin_addr;
   server_addr.sin_family = AF_INET;
   server_addr.sin_port = htons(params.port);
-  server_addr.sin_addr = ((struct sockaddr_in*)server->ai_addr)->sin_addr;
-  server_addr.sin_addr.s_addr = inet_addr(params.server);
+
 
   // add address
   unsigned char* qname = (unsigned char*)(send_buffer + sizeof(DNS_Header));
@@ -230,11 +231,11 @@ int dnsResolver(TParams params) {
      fprintf(stderr, "\nDEBUG: dns() Packet has been sucessfully send.\n");
   }
 
-  int ii = sizeof(server_addr);
-  if(recvfrom(s,(char*)receive_buffer, IP_MAXPACKET, 0, (struct sockaddr*)&server_addr, (socklen_t*)&ii) < 0)
+  socklen_t size = sizeof(struct sockaddr_in);
+  if(recvfrom(s,(char*)receive_buffer, IP_MAXPACKET, 0, (struct sockaddr*)&server_addr, &size) < 0)
   {
     perror("recvfrom()");
-    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    cleanDNSResources(server, rdata, rname, send_buffer, receive_buffer);
     return ERECEIVEFROM;
   }
   if(params.debug) {
@@ -255,19 +256,21 @@ int dnsResolver(TParams params) {
   rname = malloc(MAX_NAME_LENGTH);
   if(rname == NULL) {
     fprintf(stderr, "Allocation fails.\n");
-    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    cleanDNSResources(server, rdata, rname, send_buffer, receive_buffer);
     return EALLOC;
   }
 
   DNS_RR_Data* dns_rr_data;
   unsigned char* dns_rr_data_rdata;
 
-  printf("Question section (%d):\n", ntohs(dns_receive_header->qdcount));
+
+
+  /*printf("Question section (%d):\n", ntohs(dns_receive_header->qdcount));
   for(i = 0; i < ntohs(dns_receive_header->qdcount); i++)
   {
     if((ecode = readHostFromResourceRecord(dns_response_rr, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
       fprintf(stderr, "Program could not read resource record.\n");
-      cleanDNSResources(server,rname, send_buffer, receive_buffer);
+      cleanDNSResources(server, rdata, rname, send_buffer, receive_buffer);
       return ecode;
     }
     dns_rr_data = (DNS_RR_Data*)(dns_response_rr + rname_length + 1);
@@ -291,18 +294,87 @@ int dnsResolver(TParams params) {
          printf("  %s, AAAA, IN\n", rname);
       }
     }
-    dns_response_rr = (dns_response_rr + rname_length + sizeof(DNS_RR_Data) + rdata_length);
-  }
+    dns_response_rr = (dns_response_rr + rname_length + sizeof(DNS_RR_Data));
+  }*/
+
+
+
 
   printf("Answer section (%d):\n", ntohs(dns_receive_header->ancount));
   for(i = 0; i < ntohs(dns_receive_header->ancount); i++)
   {
     if((ecode = readHostFromResourceRecord(dns_response_rr, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
       fprintf(stderr, "Program could not read resource record.\n");
-      cleanDNSResources(server, rname, send_buffer, receive_buffer);
+      cleanDNSResources(server, rdata, rname, send_buffer, receive_buffer);
       return ecode;
     }
     dns_rr_data = (DNS_RR_Data*)(dns_response_rr + rname_length + 1);
+    rdata_length = ntohs(dns_rr_data->rdlength);
+    dns_rr_data_rdata = (unsigned char*)(dns_rr_data + sizeof(DNS_RR_Data));
+
+    if(params.debug) {
+      fprintf(stderr, "DEBUG: RR type: `%i`\n", ntohs(dns_rr_data->rtype));
+      fprintf(stderr, "DEBUG: RR class: `%i`\n", ntohs(dns_rr_data->rclass));
+      fprintf(stderr, "DEBUG: RR ttl: `%i`\n", ntohs(dns_rr_data->rttl));
+      fprintf(stderr, "DEBUG: rdlength: %i\n", ntohs(dns_rr_data->rdlength));;
+    }
+
+    if(ntohs(dns_rr_data->rclass) == CLASS_IN) {
+      if(ntohs(dns_rr_data->rtype) == TYPE_A)
+      {
+        rdata = (unsigned char*)malloc(rdata_length + 1);
+        if(rdata == NULL) {
+          fprintf(stderr, "Allocation fails.\n");
+          cleanDNSResources(server, rdata, rname, send_buffer, receive_buffer);
+          return EALLOC;
+        }
+        for (j = 0; j < ntohs(dns_rr_data->rdlength); j++)
+          rdata[j] = dns_rr_data_rdata[j];
+        rdata[rdata_length] = '\0';
+
+        struct sockaddr_in addr_in;
+        long *p;
+        p = (long*)rdata;
+        addr_in.sin_addr.s_addr = (*p);
+
+        printf("  %s, A, IN, %i, %s\n", rname, ntohs(dns_rr_data->rttl), inet_ntoa(addr_in.sin_addr));
+      }
+      else if(ntohs(dns_rr_data->rtype) == TYPE_AAAA)
+      {
+
+      } else if(ntohs(dns_rr_data->rtype) == TYPE_NS) {
+        rdata = (unsigned char*)malloc(rdata_length + 1);
+        if(rdata == NULL) {
+          fprintf(stderr, "Allocation fails.\n");
+          cleanDNSResources(server, rdata, rname, send_buffer, receive_buffer);
+          return EALLOC;
+        }
+        for (j = 0; j < ntohs(dns_rr_data->rdlength); j++)
+          rdata[j] = dns_rr_data_rdata[j];
+        rdata[rdata_length] = '\0';
+
+        struct sockaddr_in addr_in;
+        long *p;
+        p = (long*)rdata;
+        addr_in.sin_addr.s_addr = (*p);
+        printf("  %s, NS, IN, %i, %s\n", rname, ntohs(dns_rr_data->rttl), inet_ntoa(addr_in.sin_addr));
+      }
+    }
+    dns_response_rr = (dns_response_rr + rname_length + sizeof(DNS_RR_Data) + rdata_length);
+  }
+
+
+
+  printf("Authority section (%d):\n", ntohs(dns_receive_header->nscount));
+  for(i = 0; i < (int)ntohs(dns_receive_header->nscount); i++)
+  {
+    if((ecode = readHostFromResourceRecord(dns_response_rr, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
+      fprintf(stderr, "Program could not read resource record.\n");
+      cleanDNSResources(server, rdata, rname, send_buffer, receive_buffer);
+      return ecode;
+    }
+    dns_rr_data = (DNS_RR_Data*)(dns_response_rr + rname_length);
+    rdata_length = ntohs(dns_rr_data->rdlength);
     dns_rr_data_rdata = (unsigned char*)(dns_rr_data + sizeof(DNS_RR_Data));
 
     if(params.debug) {
@@ -312,14 +384,13 @@ int dnsResolver(TParams params) {
       fprintf(stderr, "DEBUG: rdlength: %i\n", ntohs(dns_rr_data->rdlength));
     }
 
-    if(ntohs(dns_rr_data->rclass) == CLASS_IN) {
+    if(ntohs(dns_rr_data->rclass) == 0) {
       if(ntohs(dns_rr_data->rtype) == TYPE_A)
       {
-        rdata_length = ntohs(dns_rr_data->rdlength);
         rdata = (unsigned char*)malloc(rdata_length + 1);
         if(rdata == NULL) {
           fprintf(stderr, "Allocation fails.\n");
-          cleanDNSResources(server, rname, send_buffer, receive_buffer);
+          cleanDNSResources(server, rdata, rname, send_buffer, receive_buffer);
           return EALLOC;
         }
         for (j = 0; j < ntohs(dns_rr_data->rdlength); j++)
@@ -336,26 +407,49 @@ int dnsResolver(TParams params) {
       else if(ntohs(dns_rr_data->rtype) == TYPE_AAAA)
       {
         // TODO:
+      } else if(ntohs(dns_rr_data->rtype) == TYPE_NS) {
+        rdata = (unsigned char*)malloc(rdata_length + 1);
+        if(rdata == NULL) {
+          fprintf(stderr, "Allocation fails.\n");
+          cleanDNSResources(server, rdata, rname, send_buffer, receive_buffer);
+          return EALLOC;
+        }
+        for (j = 0; j < ntohs(dns_rr_data->rdlength); j++)
+          rdata[j] = dns_rr_data_rdata[j];
+        rdata[rdata_length] = '\0';
+
+        struct sockaddr_in addr_in;
+        long *p;
+        p = (long*)rdata;
+        addr_in.sin_addr.s_addr = (*p);
+        printf("  %s, NS, IN, %i, %s\n", rname, ntohs(dns_rr_data->rttl), inet_ntoa(addr_in.sin_addr));
       }
-      free(rdata);
     }
     dns_response_rr = (dns_response_rr + rname_length + sizeof(DNS_RR_Data) + rdata_length);
   }
-  printf("Authority section (%d):\n", ntohs(dns_header->nscount));
+
+
+
+
   printf("Additional section (%d):\n", ntohs(dns_header->arcount));
+  for(i = 0; i < ntohs(dns_receive_header->arcount); i++)
+  {
+    
+  }
 
   // clean
-  cleanDNSResources(server, rname, send_buffer, receive_buffer);
-
+  cleanDNSResources(server, rdata, rname, send_buffer, receive_buffer);
   return ecode;
 }
 
 /* clean all variables allocated inside function dns */
-void cleanDNSResources(struct addrinfo* server, unsigned char* rname, unsigned char* send_buffer, unsigned char* receive_buffer) {
+void cleanDNSResources(struct addrinfo* server, unsigned char* rname, unsigned char* rdata, unsigned char* send_buffer, unsigned char* receive_buffer) {
   if(server != NULL)
     freeaddrinfo(server);
   if(rname != NULL)
     free(rname);
+  if(rdata != NULL)
+    free(rdata);
   if(send_buffer != NULL)
     free(send_buffer);
   if(receive_buffer != NULL)

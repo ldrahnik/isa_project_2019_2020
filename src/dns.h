@@ -29,8 +29,9 @@
  * https://www.ietf.org/rfc/rfc1035.txt (3.2.2. TYPE values)
  */
 #define TYPE_A          1
+#define TYPE_NS         2
+#define TYPE_CNAME      5
 #define TYPE_PTR        12
-
 /*
  * https://tools.ietf.org/html/rfc3596#section-2.1 (2.1 AAAA record type)
  */
@@ -78,7 +79,16 @@ typedef struct dns_question
 /*
  * https://tools.ietf.org/html/rfc1035 (3.2.1. RR Definitions)
  */
-// unsigned char *name; (variable length)
+typedef struct dns_rr
+{
+    unsigned char *name;
+    struct DNS_RR_Data *data;
+    unsigned char* rdata;
+} DNS_RR;
+
+/*
+ * https://tools.ietf.org/html/rfc1035 (3.2.1. RR Definitions)
+ */
 typedef struct dns_rr_data
 {
     uint16_t rtype;
@@ -86,13 +96,11 @@ typedef struct dns_rr_data
     int rttl;
     uint16_t rdlength;
 } DNS_RR_Data;
-// unsigned char* rdata; (variable length)
 
 int main(int argc, char *argv[]);
 int dnsResolver(TParams params);
 int readHostFromResourceRecord(unsigned char* reader, unsigned char* buffer, unsigned char* host, uint32_t* host_length, int debug);
 void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* host, int debug);
 void cleanAll(TParams params);
-void cleanDNSResources(struct addrinfo* server, unsigned char* rname, unsigned char* send_buffer, unsigned char* receive_buffer);
-
+void cleanDNSResources(struct addrinfo* server, unsigned char* rname, unsigned char* rdata, unsigned char* send_buffer, unsigned char* receive_buffer);
 #endif
