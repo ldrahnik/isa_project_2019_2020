@@ -205,7 +205,7 @@ int dnsResolver(TParams params) {
   dns_header->z = 0;
   dns_header->rcode = 0;
 
-  dns_header->qdcount = (uint16_t)htons(1);
+  dns_header->qdcount = htons(1);
   dns_header->ancount = 0;
   dns_header->nscount = 0;
   dns_header->arcount = 0;
@@ -373,7 +373,7 @@ int dnsResolver(TParams params) {
       cleanDNSResources(server, rdata, rname, send_buffer, receive_buffer);
       return ecode;
     }
-    dns_rr_data = (DNS_RR_Data*)(dns_response_rr + rname_length);
+    dns_rr_data = (DNS_RR_Data*)(dns_response_rr + rname_length + 1);
     rdata_length = ntohs(dns_rr_data->rdlength);
     dns_rr_data_rdata = (unsigned char*)(dns_rr_data + sizeof(DNS_RR_Data));
 
@@ -384,7 +384,7 @@ int dnsResolver(TParams params) {
       fprintf(stderr, "DEBUG: rdlength: %i\n", ntohs(dns_rr_data->rdlength));
     }
 
-    if(ntohs(dns_rr_data->rclass) == 0) {
+    //if(ntohs(dns_rr_data->rclass) == 1) {
       if(ntohs(dns_rr_data->rtype) == TYPE_A)
       {
         rdata = (unsigned char*)malloc(rdata_length + 1);
@@ -424,7 +424,7 @@ int dnsResolver(TParams params) {
         addr_in.sin_addr.s_addr = (*p);
         printf("  %s, NS, IN, %i, %s\n", rname, ntohs(dns_rr_data->rttl), inet_ntoa(addr_in.sin_addr));
       }
-    }
+    //}
     dns_response_rr = (dns_response_rr + rname_length + sizeof(DNS_RR_Data) + rdata_length);
   }
 
