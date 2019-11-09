@@ -56,9 +56,11 @@ typedef struct dns_header
     uint16_t opcode :4;
     uint16_t qr :1;
  
-    uint16_t rcode :4;
-    uint16_t z :3;
-    uint16_t ra :1;
+    unsigned char rcode :4; // response code
+    unsigned char cd :1; // checking disabled
+    unsigned char ad :1; // authenticated data
+    unsigned char z :1; // its z! reserved
+    unsigned char ra :1; // recursion available
  
     uint16_t qdcount; // specifying the number of entries in the question section
     uint16_t ancount; // specifying the number of resource records in the answer section
@@ -78,17 +80,9 @@ typedef struct dns_question
 
 /*
  * https://tools.ietf.org/html/rfc1035 (3.2.1. RR Definitions)
+ * pragma required for correct alignment
  */
-typedef struct dns_rr
-{
-    unsigned char *name;
-    struct DNS_RR_Data *data;
-    unsigned char* rdata;
-} DNS_RR;
-
-/*
- * https://tools.ietf.org/html/rfc1035 (3.2.1. RR Definitions)
- */
+#pragma pack(push, 1)
 typedef struct dns_rr_data
 {
     uint16_t rtype;
@@ -96,11 +90,12 @@ typedef struct dns_rr_data
     int rttl;
     uint16_t rdlength;
 } DNS_RR_Data;
+#pragma pack(pop)
 
 int main(int argc, char *argv[]);
 int dnsResolver(TParams params);
 int readHostFromResourceRecord(unsigned char* reader, unsigned char* buffer, unsigned char* host, uint32_t* host_length, int debug);
 void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* host, int debug);
 void cleanAll(TParams params);
-void cleanDNSResources(struct addrinfo* server, unsigned char* rname, unsigned char* rdata, unsigned char* send_buffer, unsigned char* receive_buffer);
+void cleanDNSResources(struct addrinfo* server, unsigned char* rname, unsigned char* send_buffer, unsigned char* receive_buffer);
 #endif
