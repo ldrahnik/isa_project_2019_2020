@@ -50,15 +50,15 @@ typedef struct dns_header
 {
     uint16_t id;
  
-    uint16_t rd :1;
-    uint16_t tc :1;
-    uint16_t aa :1;
-    uint16_t opcode :4;
-    uint16_t qr :1;
+    uint8_t rd :1;
+    uint8_t tc :1;
+    uint8_t aa :1;
+    uint8_t opcode :4;
+    uint8_t qr :1;
  
-    uint16_t rcode :4;
-    uint16_t z :3;
-    uint16_t ra :1;
+    uint8_t rcode :4;
+    uint8_t z :3;
+    uint8_t ra :1;
  
     uint16_t qdcount; // specifying the number of entries in the question section
     uint16_t ancount; // specifying the number of resource records in the answer section
