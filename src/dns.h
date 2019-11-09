@@ -56,11 +56,9 @@ typedef struct dns_header
     uint16_t opcode :4;
     uint16_t qr :1;
  
-    unsigned char rcode :4; // response code
-    unsigned char cd :1; // checking disabled
-    unsigned char ad :1; // authenticated data
-    unsigned char z :1; // its z! reserved
-    unsigned char ra :1; // recursion available
+    uint16_t rcode :4;
+    uint16_t z :3;
+    uint16_t ra :1;
  
     uint16_t qdcount; // specifying the number of entries in the question section
     uint16_t ancount; // specifying the number of resource records in the answer section
