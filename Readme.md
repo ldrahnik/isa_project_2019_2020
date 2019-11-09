@@ -9,9 +9,3 @@ TODO:
 EXTENSIONS:
 
 1) udělat rpm balíček, případně tedy man stránku a uvést v dokumentaci
-
-
-
-WIP:
-
-1) Malformed packet
