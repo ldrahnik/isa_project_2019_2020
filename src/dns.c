@@ -33,7 +33,7 @@ int readHostFromResourceRecord(unsigned char* reader, unsigned char* buffer, uns
 {
   uint32_t offset, jumped = 0, pointer = 0;
   unsigned char *name;
-  name = (unsigned char*)malloc(MAX_NAME_LENGTH);
+  name = (unsigned char*)malloc(MAX_NAME_LENGTH + 1);
   if(name == NULL) {
     fprintf(stderr, "Allocation fails.\n");
     return EALLOC;
@@ -261,6 +261,8 @@ int dnsResolver(TParams params) {
   }
 
   DNS_Header* dns_receive_header = (DNS_Header*) receive_buffer;
+  unsigned char* dns_response_qname = (receive_buffer + sizeof(DNS_Header)); 
+  DNS_Question* dns_response_question = (DNS_Question*) (receive_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 1));
   unsigned char* dns_response_rr = (receive_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 1) + sizeof(DNS_Question));
 
   printf(
@@ -271,7 +273,7 @@ int dnsResolver(TParams params) {
   );
 
   uint32_t j, rname_length = 0, rdata_length = 0;
-  rname = malloc(MAX_NAME_LENGTH);
+  rname = malloc(MAX_NAME_LENGTH + 1);
   if(rname == NULL) {
     fprintf(stderr, "Allocation fails.\n");
     cleanDNSResources(server, rname, send_buffer, receive_buffer);
@@ -281,66 +283,22 @@ int dnsResolver(TParams params) {
   DNS_RR_Data* dns_rr_data;
   unsigned char* dns_rr_data_rdata;
 
+  printf("Question section (%d):\n", ntohs(dns_receive_header->qdcount));
 
-
-  /*printf("Question section (%d):\n", ntohs(dns_receive_header->qdcount));
-  for(i = 0; i < ntohs(dns_receive_header->qdcount); i++)
-  {
-    if((ecode = readHostFromResourceRecord(dns_response_rr, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
-      fprintf(stderr, "Program could not read resource record.\n");
-      cleanDNSResources(server, rdata, rname, send_buffer, receive_buffer);
-      return ecode;
+  convertHostFromDNSFormat(dns_response_qname, rname, params.debug);
+  if(ntohs(dns_response_question->qclass) == CLASS_IN) {
+    if((ntohs(dns_response_question->qtype) == TYPE_A)) { 
+        printf("  %s, A, IN\n", rname);
+    } else if(params.ipv6 && ntohs(dns_response_question->qtype) == TYPE_AAAA) {
+        printf("  %s, AAAA, IN\n", rname);
+    } else if (params.reverse_lookup && ntohs(dns_response_question->qtype) == TYPE_PTR) {
+        printf("  %s, PTR, IN\n", rname);
     }
-    dns_response_rr = dns_response_rr + rname_length;
-    dns_rr_data = (DNS_RR_Data*)(dns_response_rr);
-    rdata_length = ntohs(dns_rr_data->rdlength);
-    dns_rr_data_rdata = (unsigned char*)(dns_response_rr + sizeof(DNS_RR_Data));
-
-    if(params.debug) {
-      fprintf(stderr, "DEBUG: RR type: `%i`\n", ntohs(dns_rr_data->rtype));
-      fprintf(stderr, "DEBUG: RR class: `%i`\n", ntohs(dns_rr_data->rclass));
-      fprintf(stderr, "DEBUG: RR ttl: `%i`\n", ntohs(dns_rr_data->rttl));
-      fprintf(stderr, "DEBUG: rdlength: %i\n", ntohs(dns_rr_data->rdlength));
-    }
-
-    rdata = (unsigned char*)malloc(rdata_length + 1);
-    if(rdata == NULL) {
-      fprintf(stderr, "Allocation fails.\n");
-      cleanDNSResources(server, rdata, rname, send_buffer, receive_buffer);
-      return EALLOC;
-    }
-    dns_response_rr = (dns_response_rr + sizeof(DNS_RR_Data));
-
-    if(ntohs(dns_rr_data->rclass) == CLASS_IN) {
-      if(ntohs(dns_rr_data->rtype) == TYPE_A)
-      {
-         for (j = 0; j < rdata_length; j++)
-           rdata[j] = dns_rr_data_rdata[j];
-         rdata[rdata_length] = '\0';
-         dns_response_rr = dns_response_rr + rdata_length;
-
-        struct sockaddr_in addr_in;
-        long *p;
-        p = (long*)rdata;
-        addr_in.sin_addr.s_addr = (*p);
-
-        printf("  %s, A, IN, %i, %s\n", rname, ntohs(dns_rr_data->rttl), inet_ntoa(addr_in.sin_addr));
-      }
-      else 
-      {
-         if((ecode = readHostFromResourceRecord(dns_response_rr, receive_buffer, rdata, &rname_length, params.debug)) != EOK) {
-           fprintf(stderr, "Program could not read resource record.\n");
-           cleanDNSResources(server, rdata, rname, send_buffer, receive_buffer);
-           return ecode;
-         }
-         dns_response_rr = dns_response_rr + rname_length;
-
-         if(ntohs(dns_rr_data->rtype) == TYPE_NS) {
-           printf("  %s, NS, IN, %s\n", rname, rdata);
-         }
-      }
-    }
-  }*/
+  } else {
+    fprintf(stderr, "Question of received packet is malformed.\n");
+    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    return EMALFORMEDPACKET;
+  }
 
   printf("Answer section (%d):\n", ntohs(dns_receive_header->ancount));
   for(i = 0; i < ntohs(dns_receive_header->ancount); i++)
@@ -362,17 +320,18 @@ int dnsResolver(TParams params) {
       fprintf(stderr, "DEBUG: rdlength: %i\n", ntohs(dns_rr_data->rdlength));;
     }
 
-    rdata = (unsigned char*)malloc(rdata_length + 100);
-    if(rdata == NULL) {
-      fprintf(stderr, "Allocation fails.\n");
-      cleanDNSResources(server, rname, send_buffer, receive_buffer);
-      return EALLOC;
-    }
     dns_response_rr = (dns_response_rr + sizeof(DNS_RR_Data));
 
     if(ntohs(dns_rr_data->rclass) == CLASS_IN) {
       if(ntohs(dns_rr_data->rtype) == TYPE_A)
       {
+        rdata = (unsigned char*)malloc(rdata_length + 1);
+        if(rdata == NULL) {
+          fprintf(stderr, "Allocation fails.\n");
+          cleanDNSResources(server, rname, send_buffer, receive_buffer);
+          return EALLOC;
+        }
+
         for (j = 0; j < rdata_length; j++)
           rdata[j] = dns_rr_data_rdata[j];
         rdata[rdata_length] = '\0';
@@ -387,6 +346,13 @@ int dnsResolver(TParams params) {
       }
       else 
       {
+         rdata = (unsigned char*)malloc(MAX_NAME_LENGTH + 1);
+         if(rdata == NULL) {
+           fprintf(stderr, "Allocation fails.\n");
+           cleanDNSResources(server, rname, send_buffer, receive_buffer);
+           return EALLOC;
+         }
+
          if((ecode = readHostFromResourceRecord(dns_response_rr, receive_buffer, rdata, &rname_length, params.debug)) != EOK) {
            fprintf(stderr, "Program could not read resource record.\n");
            cleanDNSResources(server, rname, send_buffer, receive_buffer);
@@ -425,7 +391,7 @@ int dnsResolver(TParams params) {
       fprintf(stderr, "DEBUG: rdlength: %i\n", ntohs(dns_rr_data->rdlength));
     }
 
-    rdata = (unsigned char*)malloc(rdata_length + 100);
+    rdata = (unsigned char*)malloc(MAX_NAME_LENGTH + 1);
     if(rdata == NULL) {
       fprintf(stderr, "Allocation fails.\n");
       cleanDNSResources(server, rname, send_buffer, receive_buffer);
@@ -470,17 +436,18 @@ int dnsResolver(TParams params) {
       fprintf(stderr, "DEBUG: rdlength: %i\n", ntohs(dns_rr_data->rdlength));
     }
 
-    rdata = (unsigned char*)malloc(rdata_length + 100);
-    if(rdata == NULL) {
-      fprintf(stderr, "Allocation fails.\n");
-      cleanDNSResources(server, rname, send_buffer, receive_buffer);
-      return EALLOC;
-    }
     dns_response_rr = (dns_response_rr + sizeof(DNS_RR_Data));
 
     if(ntohs(dns_rr_data->rclass) == CLASS_IN) {
       if(ntohs(dns_rr_data->rtype) == TYPE_A)
       {
+        rdata = (unsigned char*)malloc(rdata_length + 1);
+        if(rdata == NULL) {
+          fprintf(stderr, "Allocation fails.\n");
+          cleanDNSResources(server, rname, send_buffer, receive_buffer);
+          return EALLOC;
+        }
+
         for (j = 0; j < rdata_length; j++)
           rdata[j] = dns_rr_data_rdata[j];
         rdata[rdata_length] = '\0';
@@ -493,6 +460,13 @@ int dnsResolver(TParams params) {
 
         printf("  %s, A, IN, %i, %s\n", rname, ntohs(dns_rr_data->rttl), inet_ntoa(addr_in.sin_addr));
       } else {
+         rdata = (unsigned char*)malloc(MAX_NAME_LENGTH + 1);
+         if(rdata == NULL) {
+           fprintf(stderr, "Allocation fails.\n");
+           cleanDNSResources(server, rname, send_buffer, receive_buffer);
+           return EALLOC;
+         }
+
          if((ecode = readHostFromResourceRecord(dns_response_rr, receive_buffer, rdata, &rname_length, params.debug)) != EOK) {
            fprintf(stderr, "Program could not read resource record.\n");
            cleanDNSResources(server, rname, send_buffer, receive_buffer);
