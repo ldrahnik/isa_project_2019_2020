@@ -76,7 +76,7 @@ int readHostFromResourceRecord(unsigned char* response, unsigned char* buffer, u
 void convertIPv6FromBinaryFormToShortestReadableForm(unsigned char* rdata, unsigned char* shortest_readable) {
   char buffer[INET6_ADDRSTRLEN];
 
-  sprintf(buffer, "%02X%02X:%02X%02X:%02X%0X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X\n", 
+  sprintf(buffer, "%02X%02X:%02X%02X:%02X%0X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X", 
     rdata[0], rdata[1],
     rdata[2], rdata[3],
     rdata[4], rdata[5],
@@ -86,6 +86,7 @@ void convertIPv6FromBinaryFormToShortestReadableForm(unsigned char* rdata, unsig
     rdata[12], rdata[13], 
     rdata[14], rdata[15]
   );
+
   strcpy((char*)shortest_readable, buffer);
   strcat((char*)shortest_readable, "\0");
 
@@ -144,7 +145,6 @@ void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* hos
     host[i] = '.';
 
     if(host[i] == '\0') {
-      printf("counter: %i\n", i);
       break;
     }
   }
@@ -198,25 +198,23 @@ void convertHostToDNSFormat(unsigned char* host, unsigned char* dns_host_format,
   }
 }
 
-int readDataFromResourceRecord(unsigned char* response, unsigned char* buffer, uint32_t rdata_length)
+void readDataFromResourceRecord(unsigned char* response, unsigned char* buffer, uint32_t rdata_length)
 {
   unsigned char* rdata = (unsigned char*)(response + sizeof(DNS_RR_Data));
   uint32_t j;
 
   for(j = 0; j < rdata_length; j++)
     buffer[j] = rdata[j];
+
   buffer[rdata_length] = '\0';
-
-  *response += rdata_length;
-
-  return EOK;
 }
 
 /* print A type of RR */
-int printfIPv4Record(unsigned char* response, unsigned char* rname) {
+int printfIPv4Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* rname) {
 
-  DNS_RR_Data* dns_rr_data = (DNS_RR_Data*)(response);
   uint32_t rdata_length = ntohs(dns_rr_data->rdlength);
+  uint32_t rttl = ntohs(dns_rr_data->rttl);
+
   struct sockaddr_in addr_in;
   long *p;
 
@@ -230,7 +228,7 @@ int printfIPv4Record(unsigned char* response, unsigned char* rname) {
 
   p = (long*)buffer;
   addr_in.sin_addr.s_addr = (*p);
-  printf("  %s, A, IN, %i, %s\n", rname, ntohs(dns_rr_data->rttl), inet_ntoa(addr_in.sin_addr));
+  printf("  %s, A, IN, %i, %s\n", rname, rttl, inet_ntoa(addr_in.sin_addr));
 
   free(buffer);
 
@@ -261,10 +259,10 @@ int printfNSRecord(unsigned char* response, unsigned char* receive_buffer, unsig
 }
 
 /* print AAAA type of RR */
-int printfIPv6Record(unsigned char* response, unsigned char* rname) {
+int printfIPv6Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* rname) {
 
-  DNS_RR_Data* dns_rr_data = (DNS_RR_Data*)(response);
   uint32_t rdata_length = ntohs(dns_rr_data->rdlength);
+  uint32_t rttl = ntohs(dns_rr_data->rttl);
 
   unsigned char* rdata_buffer = (unsigned char*)malloc(rdata_length + 1);
   if(rdata_buffer == NULL) {
@@ -281,7 +279,7 @@ int printfIPv6Record(unsigned char* response, unsigned char* rname) {
   readDataFromResourceRecord(response, rdata_buffer, rdata_length);
 
   convertIPv6FromBinaryFormToShortestReadableForm(rdata_buffer, ip_buffer);
-  printf("  %s, AAAA, IN, %i, %s\n", rname, ntohs(dns_rr_data->rttl), ip_buffer);
+  printf("  %s, AAAA, IN, %i, %s\n", rname, rttl, ip_buffer);
 
   free(rdata_buffer);
   free(ip_buffer);
@@ -464,27 +462,22 @@ int dnsResolver(TParams params) {
       fprintf(stderr, "DEBUG: RR rdlength: %i\n", ntohs(dns_rr_data->rdlength));
     }
 
-    response += sizeof(DNS_RR_Data);
-
     if(ntohs(dns_rr_data->rclass) == CLASS_IN) {
       if(ntohs(dns_rr_data->rtype) == TYPE_A)
       {
-        if ((ecode = printfIPv4Record(response, rname)) != EOK) {
+        if ((ecode = printfIPv4Record(response, dns_rr_data, rname)) != EOK) {
           return ecode;
         }
-        response += rdata_length;
+        response += sizeof(DNS_RR_Data);
       } else if (ntohs(dns_rr_data->rtype) == TYPE_AAAA) {
-        if ((ecode = printfIPv6Record(response, rname)) != EOK) {
+        if ((ecode = printfIPv6Record(response, dns_rr_data, rname)) != EOK) {
           return ecode;
         }
-        response += rdata_length;
-      } else if(ntohs(dns_rr_data->rtype) == TYPE_NS) {
-        if ((ecode = printfNSRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
-          return ecode;
-        }
-        response += rname_length;
+        response += sizeof(DNS_RR_Data);
       }
     }
+
+    response += rdata_length;
   }
 
 
@@ -543,26 +536,26 @@ int dnsResolver(TParams params) {
     }
 
     if(ntohs(dns_rr_data->rclass) == CLASS_IN) {
-      if(ntohs(dns_rr_data->rtype) == TYPE_A)
-      {
-        if ((ecode = printfIPv4Record(response, rname)) != EOK) {
+      if(ntohs(dns_rr_data->rtype) == TYPE_A) {
+        if ((ecode = printfIPv4Record(response, dns_rr_data, rname)) != EOK) {
           return ecode;
         }
-        response += rname_length;
+        response += sizeof(DNS_RR_Data);
+        response += rdata_length;
       } else if (ntohs(dns_rr_data->rtype) == TYPE_AAAA) {
-        if ((ecode = printfIPv6Record(response, rname)) != EOK) {
+        if ((ecode = printfIPv6Record(response, dns_rr_data, rname)) != EOK) {
           return ecode;
         }
-        response += rname_length;
+        //response += sizeof(DNS_RR_Data);
+        response += rdata_length;
       } else if(ntohs(dns_rr_data->rtype) == TYPE_NS) {
         if ((ecode = printfNSRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
           return ecode;
         }
+        response += sizeof(DNS_RR_Data);
         response += rname_length;
       }
     }
-
-    response += sizeof(DNS_RR_Data);
   }
 
   // clean
