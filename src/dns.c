@@ -527,6 +527,7 @@ int dnsResolver(TParams params) {
     response += rname_length;
 
     dns_rr_data = (DNS_RR_Data*)(response);
+    rdata_length = ntohs(dns_rr_data->rdlength);
 
     if(params.debug) {
       fprintf(stderr, "DEBUG: RR type: `%i`\n", ntohs(dns_rr_data->rtype));
@@ -546,7 +547,7 @@ int dnsResolver(TParams params) {
         if ((ecode = printfIPv6Record(response, dns_rr_data, rname)) != EOK) {
           return ecode;
         }
-        //response += sizeof(DNS_RR_Data);
+        response += sizeof(DNS_RR_Data);
         response += rdata_length;
       } else if(ntohs(dns_rr_data->rtype) == TYPE_NS) {
         if ((ecode = printfNSRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
