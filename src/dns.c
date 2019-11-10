@@ -63,8 +63,6 @@ int readHostFromResourceRecord(unsigned char* response, unsigned char* buffer, u
 
   convertHostFromDNSFormat(name, host, debug);
 
-  // TODO: increment response about host_length
-
   // clean
   free(name);
 
@@ -234,8 +232,6 @@ int printfIPv4Record(unsigned char* response, unsigned char* rname) {
   addr_in.sin_addr.s_addr = (*p);
   printf("  %s, A, IN, %i, %s\n", rname, ntohs(dns_rr_data->rttl), inet_ntoa(addr_in.sin_addr));
 
-  // TODO: increment about rname_length
-
   free(buffer);
 
   return EOK;
@@ -258,8 +254,6 @@ int printfNSRecord(unsigned char* response, unsigned char* receive_buffer, unsig
   }
 
   printf("  %s, NS, IN, %s\n", rname, buffer);
-
-  // TODO: increment about rname_length
 
   free(buffer);
 
@@ -288,8 +282,6 @@ int printfIPv6Record(unsigned char* response, unsigned char* rname) {
 
   convertIPv6FromBinaryFormToShortestReadableForm(rdata_buffer, ip_buffer);
   printf("  %s, AAAA, IN, %i, %s\n", rname, ntohs(dns_rr_data->rttl), ip_buffer);
-
-  // TODO: increment about rdata_length
 
   free(rdata_buffer);
   free(ip_buffer);
@@ -460,8 +452,8 @@ int dnsResolver(TParams params) {
       cleanDNSResources(server, rname, send_buffer, receive_buffer);
       return ecode;
     }
-
     response += rname_length;
+
     dns_rr_data = (DNS_RR_Data*)response;
     rdata_length = ntohs(dns_rr_data->rdlength);
 
@@ -505,8 +497,8 @@ int dnsResolver(TParams params) {
       cleanDNSResources(server, rname, send_buffer, receive_buffer);
       return ecode;
     }
-
     response += rname_length;
+
     dns_rr_data = (DNS_RR_Data*)(response);
 
     if(params.debug) {
@@ -539,8 +531,8 @@ int dnsResolver(TParams params) {
       cleanDNSResources(server, rname, send_buffer, receive_buffer);
       return ecode;
     }
-
     response += rname_length;
+
     dns_rr_data = (DNS_RR_Data*)(response);
 
     if(params.debug) {
