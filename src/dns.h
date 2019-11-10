@@ -85,7 +85,7 @@ typedef struct dns_rr_data
 {
     uint16_t rtype;
     uint16_t rclass;
-    int rttl;
+    unsigned int rttl;
     uint16_t rdlength;
 } DNS_RR_Data;
 #pragma pack(pop)
@@ -96,4 +96,7 @@ int readHostFromResourceRecord(unsigned char* reader, unsigned char* buffer, uns
 void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* host, int debug);
 void cleanAll(TParams params);
 void cleanDNSResources(struct addrinfo* server, unsigned char* rname, unsigned char* send_buffer, unsigned char* receive_buffer);
+int printfIPv6Record(unsigned char* response, unsigned char* rname);
+int printfIPv4Record(unsigned char* response, unsigned char* rname);
+int printfNSRecord(unsigned char* response, unsigned char* receive_buffer, unsigned char* rname, uint32_t* host_length, int debug);
 #endif
