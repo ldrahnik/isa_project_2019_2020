@@ -73,8 +73,9 @@ int readHostFromResourceRecord(unsigned char* response, unsigned char* buffer, u
  * 2001:db8::1:0:0:0:1 -> 2001:db8:0:1::1
  * (https://tools.ietf.org/html/rfc5952)
  */
-void convertIPv6FromBinaryFormToShortestReadableForm(unsigned char* rdata, unsigned char* shortest_readable) {
+int convertIPv6FromBinaryFormToShortestReadableForm(unsigned char* rdata, unsigned char* shortest_readable) {
   char buffer[INET6_ADDRSTRLEN];
+  struct in6_addr in_addr;
 
   sprintf(buffer, "%02X%02X:%02X%02X:%02X%0X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X", 
     rdata[0], rdata[1],
@@ -87,44 +88,21 @@ void convertIPv6FromBinaryFormToShortestReadableForm(unsigned char* rdata, unsig
     rdata[14], rdata[15]
   );
 
+  if(inet_pton(AF_INET6, buffer, &in_addr) != 1)
+  {
+    fprintf(stderr, "IPv6 addr of one of received records in packet is malformed.\n");
+    return EMALFORMEDPACKET;
+  }
+
+  if(inet_ntop(AF_INET6, &in_addr, buffer, INET6_ADDRSTRLEN) == NULL) {
+    fprintf(stderr, "IPv6 addr of one of received records in packet is malformed.\n");
+    return EMALFORMEDPACKET;
+  }
+
   strcpy((char*)shortest_readable, buffer);
   strcat((char*)shortest_readable, "\0");
 
-  // TODO:
-  /*unsigned int last_block_is_zero = 0;
-  unsigned int start_index_of_longest_block_with_zeros = 0;
-  unsigned int start_index_of_block_with_zeros = 0;
-  unsigned int longest_block_with_zeros_length = 0;
-  unsigned int block_with_zeros_length = 0;
-
-  //char bufferr2[INET6_ADDRSTRLEN];
-  for (unsigned int i  = 0; i < strlen((char*)bufferr); i++) {
-    printf("WHEEEEEe %c\n", bufferr[i]);
-    if (bufferr[i] == ':' || i + 1 == strlen((char*)bufferr)) {
-      printf("WHEEEEEe %i, %c\n", atoi(&bufferr[i - 1]), bufferr[i - 2]);
-      //printf("WHEEEEEe %c\n", rdata[i]);
-      //printf("%i\n", (int)rdata[i - 1]);
-      if (!atoi(bufferr[i - 1]) && !atoi(bufferr[i - 2])) {
-        printf("WHEE");
-
-        block_with_zeros_length =+ 1;
-
-        if(!last_block_is_zero)
-          start_index_of_block_with_zeros = i - 2;
-
-        if(start_index_of_block_with_zeros > start_index_of_longest_block_with_zeros) {
-          start_index_of_longest_block_with_zeros = start_index_of_block_with_zeros;
-          longest_block_with_zeros_length = block_with_zeros_length;
-        }
-
-        last_block_is_zero = 1;
-      } else {
-        start_index_of_block_with_zeros = 0;
-        block_with_zeros_length = 0;
-        last_block_is_zero = 0;
-      }
-    }
-  }*/
+  return EOK;
 }
 
 /* converts 3www3fit5vutbr2cz0 -> www.fit.vutbr.cz */
@@ -263,6 +241,7 @@ int printfIPv6Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned
 
   uint32_t rdata_length = ntohs(dns_rr_data->rdlength);
   uint32_t rttl = ntohs(dns_rr_data->rttl);
+  uint8_t ecode;
 
   unsigned char* rdata_buffer = (unsigned char*)malloc(rdata_length + 1);
   if(rdata_buffer == NULL) {
@@ -278,7 +257,9 @@ int printfIPv6Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned
 
   readDataFromResourceRecord(response, rdata_buffer, rdata_length);
 
-  convertIPv6FromBinaryFormToShortestReadableForm(rdata_buffer, ip_buffer);
+  if((ecode = convertIPv6FromBinaryFormToShortestReadableForm(rdata_buffer, ip_buffer)) != EOK) {
+     return ecode;
+  }
   printf("  %s, AAAA, IN, %i, %s\n", rname, rttl, ip_buffer);
 
   free(rdata_buffer);

@@ -13,7 +13,6 @@ EXTENSIONS:
 TODO:
 
 1) chyba, vypisuji TTL 0 místo TTL 14400 u dotazu a všude jinde: ./dns -r -s kazi.fit.vutbr.cz www.fit.vut.cz
-2) upravit funkci pro výpis ipv6 AAAA záznamů na zkrácenou formu
 
 Co je OK:
 
