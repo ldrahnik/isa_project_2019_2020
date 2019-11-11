@@ -347,6 +347,7 @@ int dnsResolver(TParams params) {
   unsigned char* qname = (unsigned char*)(send_buffer + sizeof(DNS_Header));
   if(params.reverse_lookup) {
     strcpy((char*)qname, params.address);
+    printf("%s", qname);
   } else {
     convertHostToDNSFormat((unsigned char*)params.address, qname, params.debug);
   }
@@ -356,7 +357,11 @@ int dnsResolver(TParams params) {
   DNS_Header* dns_header = (DNS_Header*)send_buffer;
   dns_header->id = (uint16_t)htons(getpid());
   dns_header->qr = 0;
-  dns_header->opcode = 0;
+  if(params.reverse_lookup) {
+    dns_header->opcode = 1;
+  } else {
+    dns_header->opcode = 0;
+  }
   dns_header->aa = 0;
   dns_header->tc = 0;
   dns_header->rd = params.recursion_desired;
