@@ -19,6 +19,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netinet/ip_icmp.h>
+#include <errno.h>
 
 /*
  * https://www.ietf.org/rfc/rfc1035.txt (3.2.4. CLASS values)

@@ -414,10 +414,23 @@ int dnsResolver(TParams params) {
      fprintf(stderr, "\nDEBUG: dns() Packet has been sucessfully send.\n");
   }
 
+  // timeout
+  struct timeval tv;
+  tv.tv_sec = 5;
+  tv.tv_usec = 0;
+  if(setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof tv) != 0) {
+    perror("setsockopt()");
+    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    return ESETSOCKETOPT;
+  }
+
   socklen_t size = sizeof(struct sockaddr_in);
   if(recvfrom(s,(char*)receive_buffer, IP_MAXPACKET, 0, (struct sockaddr*)&server_addr, &size) < 0)
   {
-    perror("recvfrom()");
+    if(errno == 11)
+        perror("recvfrom()");
+    else
+        perror("recvfrom()");
     cleanDNSResources(server, rname, send_buffer, receive_buffer);
     return ERECEIVEFROM;
   }
