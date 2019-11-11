@@ -372,7 +372,7 @@ int dnsResolver(TParams params) {
 
   // question section
   // https://tools.ietf.org/html/rfc1035 (4.1.2. Question section format)
-  DNS_Question* dns_question = (DNS_Question*)(send_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + required_space_for_host_in_dns_format));
+  DNS_Question* dns_question = (DNS_Question*)(send_buffer + sizeof(DNS_Header) + (strlen((const char*)qname + 1) + required_space_for_host_in_dns_format));
   if(params.reverse_lookup) {
     dns_question->qtype = TYPE_PTR;
   } else if(params.ipv6) {
@@ -403,6 +403,41 @@ int dnsResolver(TParams params) {
   }
 
   DNS_Header* dns_receive_header = (DNS_Header*) receive_buffer;
+
+  if(dns_receive_header->qr != 1) {
+    fprintf(stderr, "Received response is not signed as response.\n");
+    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    return EMALFORMEDPACKET;
+  }
+
+  if(dns_receive_header->rcode == 1) {
+    fprintf(stderr, "Format error - The name server was unable to interpret the query.\n");
+    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    return EMALFORMEDPACKET;
+  }
+  else if(dns_receive_header->rcode == 2) {
+    fprintf(stderr, "Server failure - The name server was unable to process this query due to a problem with the name server.\n");
+    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    return EMALFORMEDPACKET;
+  }
+  else if(dns_receive_header->rcode == 3) {
+    fprintf(stderr, "Name Error - Meaningful only for responses from an authoritative name server, this code signifies that the domain name referenced in the query does not exist.\n");
+    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    return EMALFORMEDPACKET;
+  }
+  else if(dns_receive_header->rcode == 4) {
+    fprintf(stderr, "Not Implemented - The name server does not support the requested kind of query.\n");
+    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    return EMALFORMEDPACKET;
+  }
+  else if(dns_receive_header->rcode == 5) {
+    fprintf(stderr, "Refused - The name server refuses to perform the specified operation for policy reasons.  For example, a name server may not wish to provide the information to the particular requester, or a name server may not wish to perform a particular operation (e.g., zone.\n");
+    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    return EMALFORMEDPACKET;
+  }
+
+  printf("%i", dns_receive_header->qr);
+
   unsigned char* dns_response_qname = (receive_buffer + sizeof(DNS_Header)); 
   DNS_Question* dns_response_question = (DNS_Question*) (receive_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 1));
   unsigned char* response = (receive_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 1) + sizeof(DNS_Question));
