@@ -304,11 +304,11 @@ int dnsResolver(TParams params) {
   uint8_t i = 0;
 
   // create buffer's
-  uint8_t required_space_for_host_in_dns_format = 2;
+  uint8_t required_extra_space_for_qname = 1;
   if(params.reverse_lookup) {
-    required_space_for_host_in_dns_format = 1;
+    required_extra_space_for_qname = 0;
   }
-  send_buffer = malloc(sizeof(DNS_Header) + strlen((const char*)params.address) + required_space_for_host_in_dns_format + sizeof(DNS_Question));
+  send_buffer = malloc(sizeof(DNS_Header) + strlen((const char*)params.address) + 1 + required_extra_space_for_qname + sizeof(DNS_Question));
   if(send_buffer == NULL) {
     fprintf(stderr, "Allocation fails.\n");
     return EALLOC;
@@ -372,7 +372,7 @@ int dnsResolver(TParams params) {
 
   // question section
   // https://tools.ietf.org/html/rfc1035 (4.1.2. Question section format)
-  DNS_Question* dns_question = (DNS_Question*)(send_buffer + sizeof(DNS_Header) + (strlen((const char*)qname + 1) + required_space_for_host_in_dns_format));
+  DNS_Question* dns_question = (DNS_Question*)(send_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 1 + required_extra_space_for_qname));
   if(params.reverse_lookup) {
     dns_question->qtype = TYPE_PTR;
   } else if(params.ipv6) {
@@ -382,7 +382,7 @@ int dnsResolver(TParams params) {
   }
   dns_question->qclass = CLASS_IN;
 
-  if(sendto(s, (char*) send_buffer, sizeof(DNS_Header) + (strlen((const char*)qname) + required_space_for_host_in_dns_format) + sizeof(DNS_Question), 0, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
+  if(sendto(s, (char*) send_buffer, sizeof(DNS_Header) + (strlen((const char*)qname) + 1 + required_extra_space_for_qname) + sizeof(DNS_Question), 0, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
   {
     perror("sendto()");
     return ESENDTO;
