@@ -236,6 +236,29 @@ int printfNSRecord(unsigned char* response, unsigned char* receive_buffer, unsig
   return EOK;
 }
 
+/* print CNAME type of RR */
+int printfCanonicalNameRecord(unsigned char* response, unsigned char* receive_buffer, unsigned char* rname, uint32_t* rname_length, int debug) {
+  
+  int ecode;
+
+  unsigned char* buffer = (unsigned char*)malloc(MAX_NAME_LENGTH + 1);
+  if(buffer == NULL) {
+    fprintf(stderr, "Allocation fails.\n");
+    return EALLOC;
+  }
+
+  if((ecode = readHostFromResourceRecord(response, receive_buffer, buffer, rname_length, debug)) != EOK) {
+    fprintf(stderr, "Program could not read resource record.\n");
+    return ecode;
+  }
+
+  printf("  %s, CNAME, IN, %s\n", rname, buffer);
+
+  free(buffer);
+
+  return EOK;
+}
+
 /* print AAAA type of RR */
 int printfIPv6Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* rname) {
 
@@ -452,6 +475,11 @@ int dnsResolver(TParams params) {
         response += sizeof(DNS_RR_Data);
       } else if (ntohs(dns_rr_data->rtype) == TYPE_AAAA) {
         if ((ecode = printfIPv6Record(response, dns_rr_data, rname)) != EOK) {
+          return ecode;
+        }
+        response += sizeof(DNS_RR_Data);
+      } else if (ntohs(dns_rr_data->rtype) == TYPE_CNAME) {
+        if ((ecode = printfCanonicalNameRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
           return ecode;
         }
         response += sizeof(DNS_RR_Data);

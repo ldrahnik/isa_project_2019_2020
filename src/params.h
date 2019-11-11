@@ -22,8 +22,8 @@
 
 #include "error.h"
 
-#define IP6_ARPA_TERMINATION "ip6.arpa." 
-#define IP4_ARPA_TERMINATION "ip4.arpa."
+#define IP6_ARPA_TERMINATION "IP6.ARPA." 
+#define IP4_ARPA_TERMINATION "IN-ADDR.ARPA."
 
 typedef struct params {
   uint8_t ecode; // error code
