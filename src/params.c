@@ -257,7 +257,7 @@ int convertIPv6ToARPAFormat(char* address, char* address_arpa_format, int debug)
     // 9a08.... -> 9a088...
     // 9a088... -> 9a0.8...
     buffer[i + 4] = buffer[i + 3];
-    buffer[i + 3] = '\01';
+    buffer[i + 3] = '.';
 
     // 9a0.8... -> 9a0.8.0.
     buffer[i + 6] = buffer[i + 2];
@@ -267,7 +267,7 @@ int convertIPv6ToARPAFormat(char* address, char* address_arpa_format, int debug)
     // aa9.8.0. -> a.9.8.0.
     buffer[i + 2] = buffer[i];
     buffer[i] = buffer[i + 1];
-    buffer[i + 1] = '\01';
+    buffer[i + 1] = '.';
   }
 
   if(debug) {

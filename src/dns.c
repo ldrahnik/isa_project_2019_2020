@@ -292,7 +292,7 @@ int printfIPv6Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned
 }
 
 /* print PTR type of RR */
-int printfPtrRecord(unsigned char* response, unsigned char* receive_buffer, unsigned char* rname, uint32_t* rname_length, int debug) {
+int printfDomainNamePointerRecord(unsigned char* response, unsigned char* receive_buffer, unsigned char* rname, uint32_t* rname_length, int debug) {
 
   int ecode;
 
@@ -377,7 +377,7 @@ int dnsResolver(TParams params) {
   // header section
   // https://tools.ietf.org/html/rfc1035 (4.1.1. Header section format)
   DNS_Header* dns_header = (DNS_Header*)send_buffer;
-  dns_header->id = (uint16_t)htons(getpid());
+  dns_header->id = htons(getpid());
   dns_header->qr = 0;
   dns_header->opcode = 0;
   dns_header->aa = 0;
@@ -542,7 +542,7 @@ int dnsResolver(TParams params) {
         }
         response += sizeof(DNS_RR_Data);
       } else if (ntohs(dns_rr_data->rtype) == TYPE_PTR) {
-        if ((ecode = printfPtrRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
+        if ((ecode = printfDomainNamePointerRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
           return ecode;
         }
         response += sizeof(DNS_RR_Data);
@@ -628,7 +628,7 @@ int dnsResolver(TParams params) {
         response += sizeof(DNS_RR_Data);
         response += rname_length;
       } else if (ntohs(dns_rr_data->rtype) == TYPE_PTR) {
-        if ((ecode = printfPtrRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
+        if ((ecode = printfDomainNamePointerRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
           return ecode;
         }
         response += sizeof(DNS_RR_Data);
