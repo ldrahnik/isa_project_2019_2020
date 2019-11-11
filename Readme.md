@@ -5,6 +5,7 @@ TODO:
 3) napsat do dokumentace do části upřesnění zadání přidání debug parametru
 4) napsat do dokumentace do části upřesnění zadání, že kombinace -x a -6 není povolená
 5) napsat do dokumentace do části upřesnění zadání, že při zobrazování počítám pouze s class INTERNET
+6) timeout pro přijetí odpovědi je vyřešen 5 sekundami
 
 EXTENSIONS:
 
