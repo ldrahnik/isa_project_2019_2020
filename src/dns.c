@@ -307,7 +307,7 @@ int printfDomainNamePointerRecord(unsigned char* response, unsigned char* receiv
     return ecode;
   }
 
-  printf("  %s, CNAME, IN, %s\n", rname, buffer);
+  printf("  %s, PTR, IN, %s\n", rname, buffer);
 
   free(buffer);
 
@@ -327,16 +327,11 @@ int dnsResolver(TParams params) {
   uint8_t i = 0;
 
   // create buffer's
-  uint8_t required_extra_space_for_qname = 1;
-  if(params.reverse_lookup) {
-    required_extra_space_for_qname = 0;
-  }
-  send_buffer = malloc(sizeof(DNS_Header) + strlen((const char*)params.address) + 1 + required_extra_space_for_qname + sizeof(DNS_Question));
+  send_buffer = malloc(sizeof(DNS_Header) + strlen((const char*)params.address) + 2 + sizeof(DNS_Question));
   if(send_buffer == NULL) {
     fprintf(stderr, "Allocation fails.\n");
     return EALLOC;
   }
-
   receive_buffer = malloc(IP_MAXPACKET);
   if(receive_buffer == NULL) {
     fprintf(stderr, "Allocation fails.\n");
@@ -368,11 +363,7 @@ int dnsResolver(TParams params) {
 
   // add address
   unsigned char* qname = (unsigned char*)(send_buffer + sizeof(DNS_Header));
-  if(params.reverse_lookup) {
-    strcpy((char*)qname, params.address);
-  } else {
-    convertHostToDNSFormat((unsigned char*)params.address, qname, params.debug);
-  }
+  convertHostToDNSFormat((unsigned char*)params.address, qname, params.debug);
 
   // header section
   // https://tools.ietf.org/html/rfc1035 (4.1.1. Header section format)
@@ -395,7 +386,7 @@ int dnsResolver(TParams params) {
 
   // question section
   // https://tools.ietf.org/html/rfc1035 (4.1.2. Question section format)
-  DNS_Question* dns_question = (DNS_Question*)(send_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 1 + required_extra_space_for_qname));
+  DNS_Question* dns_question = (DNS_Question*)(send_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 2));
   if(params.reverse_lookup) {
     dns_question->qtype = TYPE_PTR;
   } else if(params.ipv6) {
@@ -405,7 +396,7 @@ int dnsResolver(TParams params) {
   }
   dns_question->qclass = CLASS_IN;
 
-  if(sendto(s, (char*) send_buffer, sizeof(DNS_Header) + (strlen((const char*)qname) + 1 + required_extra_space_for_qname) + sizeof(DNS_Question), 0, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
+  if(sendto(s, (char*) send_buffer, sizeof(DNS_Header) + (strlen((const char*)qname) + 2) + sizeof(DNS_Question), 0, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
   {
     perror("sendto()");
     return ESENDTO;
@@ -471,8 +462,6 @@ int dnsResolver(TParams params) {
     cleanDNSResources(server, rname, send_buffer, receive_buffer);
     return EMALFORMEDPACKET;
   }
-
-  printf("%i", dns_receive_header->qr);
 
   unsigned char* dns_response_qname = (receive_buffer + sizeof(DNS_Header)); 
   DNS_Question* dns_response_question = (DNS_Question*) (receive_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 1));
