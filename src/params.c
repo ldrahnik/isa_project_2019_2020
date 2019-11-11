@@ -231,7 +231,7 @@ int isIPv6VersionAddress(char *ip_address) {
 int convertIPv6ToARPAFormat(char* address, char* address_arpa_format, int debug) {
   struct in6_addr in6_address; 
   uint16_t i; 
-  uint8_t arpa_format_length = INET6_ADDRSTRLEN + 20 + strlen(IP6_ARPA_TERMINATION) + 1;
+  uint8_t arpa_format_length = INET6_ADDRSTRLEN + 20;
   char buffer[arpa_format_length];
 
   inet_pton(AF_INET6, address, &in6_address);
@@ -274,13 +274,12 @@ int convertIPv6ToARPAFormat(char* address, char* address_arpa_format, int debug)
     fprintf(stderr, "DEBUG: convertIPv6ToARPAFormat() address in arpa format (without termination string): `%s`\n\n", buffer);
   }
 
-  strcat(buffer, IP6_ARPA_TERMINATION);
+  strcpy(address_arpa_format, buffer);
+  strcat(address_arpa_format, IP6_ARPA_TERMINATION);
+  strcat(address_arpa_format, "\0");
 
   if(debug)
-    fprintf(stderr, "DEBUG: convertIPv6ToARPAFormat() address in arpa format: `%s`\n\n", buffer);
-
-  strcpy(address_arpa_format, buffer);
-  strcpy(address_arpa_format, "\0");
+    fprintf(stderr, "DEBUG: convertIPv6ToARPAFormat() address in arpa format: `%s`\n\n", address_arpa_format);
 
   return EOK;
 }

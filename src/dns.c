@@ -291,6 +291,38 @@ int printfIPv6Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned
   return EOK;
 }
 
+/* print PTR type of RR */
+int printfPtrRecord(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* rname) {
+
+  uint32_t rdata_length = ntohs(dns_rr_data->rdlength);
+  uint32_t rttl = ntohs(dns_rr_data->rttl);
+  uint8_t ecode;
+
+  unsigned char* rdata_buffer = (unsigned char*)malloc(rdata_length + 1);
+  if(rdata_buffer == NULL) {
+    fprintf(stderr, "Allocation fails.\n");
+    return EALLOC;
+  }
+
+  unsigned char* ip_buffer = (unsigned char*)malloc(INET6_ADDRSTRLEN);
+  if(ip_buffer == NULL) {
+    fprintf(stderr, "Allocation fails.\n");
+    return EALLOC;
+  }
+
+  readDataFromResourceRecord(response, rdata_buffer, rdata_length);
+
+  if((ecode = convertIPv6FromBinaryFormToShortestReadableForm(rdata_buffer, ip_buffer)) != EOK) {
+     return ecode;
+  }
+  printf("  %s, PTR, IN, %i, %s\n", rname, rttl, ip_buffer);
+
+  free(rdata_buffer);
+  free(ip_buffer);
+
+  return EOK;
+}
+
 /* handles process of dns request and response */
 int dnsResolver(TParams params) {
   int ecode = EOK;
@@ -347,7 +379,6 @@ int dnsResolver(TParams params) {
   unsigned char* qname = (unsigned char*)(send_buffer + sizeof(DNS_Header));
   if(params.reverse_lookup) {
     strcpy((char*)qname, params.address);
-    printf("%s", qname);
   } else {
     convertHostToDNSFormat((unsigned char*)params.address, qname, params.debug);
   }
@@ -357,11 +388,7 @@ int dnsResolver(TParams params) {
   DNS_Header* dns_header = (DNS_Header*)send_buffer;
   dns_header->id = (uint16_t)htons(getpid());
   dns_header->qr = 0;
-  if(params.reverse_lookup) {
-    dns_header->opcode = 1;
-  } else {
-    dns_header->opcode = 0;
-  }
+  dns_header->opcode = 0;
   dns_header->aa = 0;
   dns_header->tc = 0;
   dns_header->rd = params.recursion_desired;
@@ -523,6 +550,11 @@ int dnsResolver(TParams params) {
           return ecode;
         }
         response += sizeof(DNS_RR_Data);
+      } else if (ntohs(dns_rr_data->rtype) == TYPE_PTR) {
+        if ((ecode = printfPtrNameRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
+          return ecode;
+        }
+        response += sizeof(DNS_RR_Data);
       }
     }
 
@@ -604,6 +636,11 @@ int dnsResolver(TParams params) {
         }
         response += sizeof(DNS_RR_Data);
         response += rname_length;
+      } else if (ntohs(dns_rr_data->rtype) == TYPE_PTR) {
+        if ((ecode = printfPtrNameRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
+          return ecode;
+        }
+        response += sizeof(DNS_RR_Data);
       }
     }
   }
