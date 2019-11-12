@@ -99,7 +99,7 @@ void cleanAll(TParams params);
 void cleanDNSResources(struct addrinfo* server, unsigned char* rname, unsigned char* send_buffer, unsigned char* receive_buffer);
 int printfIPv6Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* rname);
 int printfIPv4Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* rname);
-int printfNSRecord(unsigned char* response, unsigned char* receive_buffer, unsigned char* rname, uint32_t* host_length, int debug);
+int printfNSRecord(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* receive_buffer, unsigned char* rname, uint32_t* host_length, int debug);
 int printfDomainNamePointerRecord(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* rname, int debug);
 
 #endif

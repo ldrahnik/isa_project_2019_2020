@@ -214,9 +214,10 @@ int printfIPv4Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned
 }
 
 /* print NS type of RR */
-int printfNSRecord(unsigned char* response, unsigned char* receive_buffer, unsigned char* rname, uint32_t* rname_length, int debug) {
+int printfNSRecord(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* receive_buffer, unsigned char* rname, uint32_t* rname_length, int debug) {
 
   int ecode;
+  uint32_t rttl = ntohs(dns_rr_data->rttl);
 
   unsigned char* buffer = (unsigned char*)malloc(MAX_NAME_LENGTH + 1);
   if(buffer == NULL) {
@@ -229,7 +230,7 @@ int printfNSRecord(unsigned char* response, unsigned char* receive_buffer, unsig
     return ecode;
   }
 
-  printf("  %s, NS, IN, %s\n", rname, buffer);
+  printf("  %s, NS, IN, %i, %s\n", rname, rttl, buffer);
 
   free(buffer);
 
@@ -580,7 +581,7 @@ int dnsResolver(TParams params) {
 
     if(ntohs(dns_rr_data->rclass) == CLASS_IN) {
       if(ntohs(dns_rr_data->rtype) == TYPE_NS) {
-        if ((ecode = printfNSRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
+        if ((ecode = printfNSRecord(response, dns_rr_data, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
           return ecode;
         }
         response += rname_length;
@@ -625,7 +626,7 @@ int dnsResolver(TParams params) {
         response += sizeof(DNS_RR_Data);
         response += rdata_length;
       } else if(ntohs(dns_rr_data->rtype) == TYPE_NS) {
-        if ((ecode = printfNSRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
+        if ((ecode = printfNSRecord(response, dns_rr_data, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
           return ecode;
         }
         response += sizeof(DNS_RR_Data);
