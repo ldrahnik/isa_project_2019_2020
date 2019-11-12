@@ -262,9 +262,9 @@ int printfCanonicalNameRecord(unsigned char* response, unsigned char* receive_bu
 /* print AAAA type of RR */
 int printfIPv6Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* rname) {
 
+  uint8_t ecode;
   uint32_t rdata_length = ntohs(dns_rr_data->rdlength);
   uint32_t rttl = ntohs(dns_rr_data->rttl);
-  uint8_t ecode;
 
   unsigned char* rdata_buffer = (unsigned char*)malloc(rdata_length + 1);
   if(rdata_buffer == NULL) {
@@ -292,9 +292,11 @@ int printfIPv6Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned
 }
 
 /* print PTR type of RR */
-int printfDomainNamePointerRecord(unsigned char* response, unsigned char* receive_buffer, unsigned char* rname, uint32_t* rname_length, int debug) {
+int printfDomainNamePointerRecord(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* rname, int debug) {
 
-  int ecode;
+  //uint8_t ecode;
+  uint32_t rdata_length = ntohs(dns_rr_data->rdlength);
+  uint32_t rttl = ntohs(dns_rr_data->rttl);
 
   unsigned char* buffer = (unsigned char*)malloc(MAX_NAME_LENGTH + 1);
   if(buffer == NULL) {
@@ -302,12 +304,11 @@ int printfDomainNamePointerRecord(unsigned char* response, unsigned char* receiv
     return EALLOC;
   }
 
-  if((ecode = readHostFromResourceRecord(response, receive_buffer, buffer, rname_length, debug)) != EOK) {
-    fprintf(stderr, "Program could not read resource record.\n");
-    return ecode;
-  }
+  readDataFromResourceRecord(response, buffer, rdata_length);
 
-  printf("  %s, PTR, IN, %s\n", rname, buffer);
+  convertHostFromDNSFormat(buffer, buffer, debug);
+
+  printf("  %s, PTR, IN, %i, %s\n", rname, rttl, buffer);
 
   free(buffer);
 
@@ -544,7 +545,7 @@ int dnsResolver(TParams params) {
         }
         response += sizeof(DNS_RR_Data);
       } else if (ntohs(dns_rr_data->rtype) == TYPE_PTR) {
-        if ((ecode = printfDomainNamePointerRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
+        if ((ecode = printfDomainNamePointerRecord(response, dns_rr_data, rname, params.debug)) != EOK) {
           return ecode;
         }
         response += sizeof(DNS_RR_Data);
@@ -630,7 +631,7 @@ int dnsResolver(TParams params) {
         response += sizeof(DNS_RR_Data);
         response += rname_length;
       } else if (ntohs(dns_rr_data->rtype) == TYPE_PTR) {
-        if ((ecode = printfDomainNamePointerRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
+        if ((ecode = printfDomainNamePointerRecord(response, dns_rr_data, rname, params.debug)) != EOK) {
           return ecode;
         }
         response += sizeof(DNS_RR_Data);

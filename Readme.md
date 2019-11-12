@@ -15,7 +15,6 @@ TODO:
 
 1) chyba, vypisuji TTL 0 místo TTL 14400 u dotazu a všude jinde: ./dns -r -s kazi.fit.vutbr.cz www.fit.vut.cz
 2) podpora CNAME (někde otestovat vypisování + rekurzivní volání)
-3) -x reverse requests
 
 Co je OK:
 
