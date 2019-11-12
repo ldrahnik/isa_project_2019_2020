@@ -1,4 +1,4 @@
-TODO:
+TODO dokumentace:
 
 1) otestovat pomocí vagrantu a do dokumentace to uvést
 2) napsat do dokumentace do části upřesnění zadání, že parametr server jsem dal jako vyžadovaný
@@ -14,7 +14,6 @@ EXTENSIONS:
 TODO:
 
 1) chyba, vypisuji TTL 0 místo TTL 14400 u dotazu a všude jinde: ./dns -r -s kazi.fit.vutbr.cz www.fit.vut.cz
-2) podpora CNAME (někde otestovat vypisování + rekurzivní volání)
 
 Co je OK:
 
@@ -49,3 +48,15 @@ Additional section (3):
   guta.fit.vutbr.cz, A, IN, 0, 147.229.9.11
   kazi.fit.vutbr.cz, A, IN, 0, 147.229.8.12
   guta.fit.vutbr.cz, AAAA, IN, 0, 2001:067C:1220:0809:0000:0000:93E5:090B
+
+
+3) sudo valgrind --track-origins=yes --leak-check=full ./dns -r -s 8.8.8.8 clients4.google.com
+Authoritative: No, Recursive: Yes, Truncated: No
+
+Question section (1):
+  clients4.google.com, A, IN
+Answer section (2):
+  clients4.google.com, CNAME, IN, 0, clients.l.google.com
+  clients.l.google.com, A, IN, 0, 216.58.201.110
+Authority section (0):
+Additional section (0):
