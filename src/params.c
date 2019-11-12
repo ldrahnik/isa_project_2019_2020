@@ -331,7 +331,6 @@ int isHostValid(char* node) {
   hints.ai_flags = AI_ADDRCONFIG;
 
   if(getaddrinfo(node, NULL, &hints, &results) != 0) {
-    freeaddrinfo(results);
     return 1;
   }
 
