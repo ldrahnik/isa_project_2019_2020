@@ -6,6 +6,7 @@ TODO dokumentace:
 4) napsat do dokumentace do části upřesnění zadání, že kombinace -x a -6 není povolená
 5) napsat do dokumentace do části upřesnění zadání, že při zobrazování počítám pouze s class INTERNET
 6) timeout pro přijetí odpovědi je vyřešen 5 sekundami
+7) návratové kódy, pokud aplikace položí dotaz a vypíše úspěšně všechny výsledky i prázdný seznam výsledků, vrací návratový kód 0
 
 EXTENSIONS:
 
