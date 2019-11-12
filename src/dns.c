@@ -238,9 +238,10 @@ int printfNSRecord(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned c
 }
 
 /* print CNAME type of RR */
-int printfCanonicalNameRecord(unsigned char* response, unsigned char* receive_buffer, unsigned char* rname, uint32_t* rname_length, int debug) {
-  
+int printfCanonicalNameRecord(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* receive_buffer, unsigned char* rname, uint32_t* rname_length, int debug) {
+
   int ecode;
+  uint32_t rttl = ntohs(dns_rr_data->rttl);
 
   unsigned char* buffer = (unsigned char*)malloc(MAX_NAME_LENGTH + 1);
   if(buffer == NULL) {
@@ -253,7 +254,7 @@ int printfCanonicalNameRecord(unsigned char* response, unsigned char* receive_bu
     return ecode;
   }
 
-  printf("  %s, CNAME, IN, %s\n", rname, buffer);
+  printf("  %s, CNAME, IN, %i, %s\n", rname, rttl, buffer);
 
   free(buffer);
 
@@ -541,10 +542,10 @@ int dnsResolver(TParams params) {
         }
         response += sizeof(DNS_RR_Data);
       } else if (ntohs(dns_rr_data->rtype) == TYPE_CNAME) {
-        if ((ecode = printfCanonicalNameRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
+        response += sizeof(DNS_RR_Data);
+        if ((ecode = printfCanonicalNameRecord(response, dns_rr_data, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
           return ecode;
         }
-        response += sizeof(DNS_RR_Data);
       } else if (ntohs(dns_rr_data->rtype) == TYPE_PTR) {
         if ((ecode = printfDomainNamePointerRecord(response, dns_rr_data, rname, params.debug)) != EOK) {
           return ecode;
