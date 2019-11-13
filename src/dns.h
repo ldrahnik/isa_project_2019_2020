@@ -82,6 +82,7 @@ typedef struct dns_question
  * pragma required for correct alignment
  */
 #pragma pack(push, 1)
+// unsigned char *rname; (variable length)
 typedef struct dns_rr_data
 {
     uint16_t rtype;
@@ -89,6 +90,7 @@ typedef struct dns_rr_data
     int rttl;
     uint16_t rdlength;
 } DNS_RR_Data;
+// unsigned char *rdata; (variable length)
 #pragma pack(pop)
 
 int main(int argc, char *argv[]);

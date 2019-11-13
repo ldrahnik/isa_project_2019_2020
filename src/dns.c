@@ -17,7 +17,7 @@ const char *HELP_MSG = {
   "-6: Use AAAA instead of default A\n"
   "-s: IP address or domain name of server where is request sent\n"
   "-p port: port number where is request sent, default 53\n"
-  "address: requested address.\n"
+  "host: requested hostname (when is active -x valid IPv4/IPv6 address)"
 };
 
 /* clean entire TParams structure */

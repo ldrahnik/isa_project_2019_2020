@@ -23,11 +23,6 @@
 \setlength{\parskip}{1em}
 \pgfplotsset{compat=1.15}
 
-\pgfplotstableset{% global config, for example in the preamble
-  every head row/.style={before row=\toprule,after row=\midrule},
-  every last row/.style={after row=\bottomrule},
-  fixed
-}
 
 \begin{document}
 
@@ -51,13 +46,127 @@
 
 \end{titlepage}
 
-\section{Úvod}
+\section{Upřesnění zadání}
+
+Program obsahuje nápovědu po zavolání parametru `-h`. Parametr server `-s` je nastavený jako povinný, v programu proto není nastavený defaultni server. Program obsahuje proti zadání možnost si zapnout debugovací režim `-d`. V zadání není přesně uvedené, že je kombinace reverzního typu dotazu PTR aktivovaného přepínačem `-x` a IPv6 typu dotazu `AAAA` aktivovaného přepínačem `-6` zakázaná, ale typ dotazu můžu být pouze jeden a proto není v programu tato kombinace povolená. Pokud je položen dotaz, na tento dotaz je přijata odpověď a program vypíše všechny výsledky (včetně prázdného seznamu výsledků), program vrací návratový kód `0`. Specifické návratové kódy jsou popsány v kategorii `Návratové kódy programu`. Program počítá s/kontroluje v odpovědích třídu internet `IN`.
+
+\section{Program}
+
+Program je členěný do modulů. Z funkce `main()` v hlavním modulu `dns.c` se jako první volá zpracování parametrů a jejich validace v modulu `params.c`. Při validaci se ověřuje zda není použita zakázaná kombinace parametrů jako například `-x` a `-6`, zda je zadán validní host případně validní IP adresa při reverzním dotazu. V tomto modulu také dochází ke konverzi IP adres na `nibble` formát při vyžádání reverzního dotazu.
+
+Vstupní parametry byly naimplementovány následovně: rekurzivní dotaz je změna z 0 na 1 v hlavičce DNS dotazu, reverzní dotaz změnou typu z defaultního `A` na `PTR`, validaci IP IPv4/IPv6 adresy a její konverze na vyžadovaný `nibble` formát, IPv6 dotaz změnou typu z defaultního `A` na `AAAA`, port je změna v hlavičce DNS dotazu.
+
+Poslání a přijetí odpovědi na samotný dotaz je vykonáno po zpracování argumentů v hlavním modulu `dns.c` v jeho hlavní metodě `dnsResolver()`. Modul dále obsahuje řadu podpůrných metod sloužící např. pro konverzi doménového jména na formát používaný v dotazu a zpět, čtení doménových jmen v odpovědi, konverze IP adres z binárního formátu do formátu pro výpis a zpět a výpis jednotlivých typů záznamů.
+
+Program na zaslaný dotaz čeká 5 vteřin. Toto čekání je naimplementováno konfigurací socketu a nastavením timeoutu pro obdržení `SO\_RCVTIMEO`.
+
+Program se v odpovědi postupně posouvá pomocí ukazatele a vypisuje pomocí podpůrných metod jednotlivé `RR's`. Pro rozumění samotné odpovědi jsou nadefinovány dle informací z RFC struktury pro DNS hlavičku (která se vyplňuje při odesílání dotazu, ale vrací se stejně tak s dotazy - v našem případě vždy s jedním dotazem), dále pro samotný dotaz (variabilní délka, typ dotazu a třída) a nejdůležitější struktura pro samotné dotazy, která obsahuje 2 variabilní položky název před přesně stanovenými daty typ, třída, ttl a délka dat následujících po této položce. 
+
+\subsection{Formát výstupních dat}
+
+Výstupní formát dat kopíruje formát uvedený v zadání k programu:
+
+```
+Authoritative: No/Yes, Recursive: No/Yes, Truncated: No/Yes
+Question section (XY)
+  [doménové jméno], [typ záznamu - viz. podporované typy záznamů], [třída - jiná než IN není podporována], [ttl - v sekundách], [ip adresa / doménové jméno v případě typu CNAME]
+Answer section (XY)
+Authority section (XY)
+Additional section (XY)
+```
+
+\subsection{Podporované typy záznamů}
+
+Program vypisuje všechny výsledky, které dostane a které jsou tohoto typu (u zbylých zobrazí správný počet výsledků v dané sekci, ale nevypíše je):
+
+```
+A
+AAAA
+PTR
+CNAME
+```
+
+\subsection{Návratové kódy}
+
+```
+1 - nesprávné zavolání programu (chybí vyžadovaný parametr, uvedený parametr není validní, kombinace parametrů je zakázána, ...)
+2 - problém s alokováním prostoru
+3 - problém při navazování komunikace (konkrétně funkce socket())
+4 - problém při odesílání dotazu (konkrétně funkce sendto()) 
+5 - problém při přijímání odpovědi (konkrétně funkce recvfrom()) 
+6 - problém při zpracovávání přijaté odpovědí (nemá správný formát, je poškozená, ...)
+7 - problém při navazování komunikace (konkrétně funkce setsockopt())
+```
+
+\section{Testování}
+
+\subsection{Debugovací režim}
+
+Debugovací režim se aktivuje po uvedení option `-d`. Při zapnutém debugovacím režimu jsou vypisovány důležité informace sloužící především pro ladění programu, tedy pro případné odhalení chyby v programu, ale i pro větší pochopení jak program funguje. Tyto zprávy obsahují například konverze ze standartního zápisu doménového jména na zápis používaný v posílaném dotazu a naopak, konverze IP adres nebo přijatá data získaná z odpovědi před posouzením zda jsou správná. Veškeré zprávy směřují na standartní chybový výstup.
+
+Tyto zprávy jsou posílányjako např. při převádění adres na formát použitý v DNS dotazu, 
+
+\subsection{Valgrind}
+
+Program byl otestován pomocí nástroje `Valgrind`. Veškerá paměť alokovaná v průběhu běhu programu je před jeho ukončením správně uvolněna. V programu nedochází k únikům paměti. K otestování byl použit Valgrind verze `3.13.0`. Valgrind byl spouštěn s parametry verbose `-v`, track origins --track-origins=yes a leak check `--leak-check=full`.
 
 test citate \cite{test_citate}
 
+\section{Ukázka spuštění}
+
+Ukázka spustění s defaultním IPv4 typem dotazu `A`:
+
+```
+./dns -s 8.8.8.8 clients4.google.com
+Authoritative: No, Recursive: No, Truncated: No
+
+Question section (1):
+  clients4.google.com, A, IN
+Answer section (2):
+  clients4.google.com, CNAME, IN, 0, clients.l.google.com
+  clients.l.google.com, A, IN, 0, 216.58.201.110
+Authority section (0):
+Additional section (0):
+```
+
+Ukázka spustění s nastaveným IPv6 typem dotazu `AAAA` aktivovaného použitím přepínače `-6`:
+
+```
+./dns -6 -s 147.229.8.12 www.fit.vutbr.cz
+Authoritative: No, Recursive: No, Truncated: No
+
+Question section (1):
+  www.fit.vutbr.cz, AAAA, IN
+Answer section (1):
+  www.fit.vutbr.cz, AAAA, IN, 0, 2001:067C:1220:0809:0000:0000:93E5:0917
+Authority section (4):
+  fit.vutbr.cz, NS, IN, gate.feec.vutbr.cz
+  fit.vutbr.cz, NS, IN, guta.fit.vutbr.cz
+  fit.vutbr.cz, NS, IN, kazi.fit.vutbr.cz
+  fit.vutbr.cz, NS, IN, rhino.cis.vutbr.cz
+Additional section (3):
+  guta.fit.vutbr.cz, A, IN, 0, 147.229.9.11
+  kazi.fit.vutbr.cz, A, IN, 0, 147.229.8.12
+  guta.fit.vutbr.cz, AAAA, IN, 0, 2001:067C:1220:0809:0000:0000:93E5:090B
+```
+
+Ukázka spuštění s nastaveným reverzním typem dotazu `PTR` akvivovaného přepínačem `-x` (je potřeba uvést validní IPv4/IPv6 adresu):
+
+```
+./dns -x -r -s 8.8.8.8 172.217.23.206
+Authoritative: No, Recursive: Yes, Truncated: No
+
+Question section (1):
+  206.23.217.172.in-addr.arpa, PTR, IN
+Answer section (2):
+  206.23.217.172.in-addr.arpa, PTR, IN, 0, prg03s05-in-f206.1e100.net
+  206.23.217.172.in-addr.arpa, PTR, IN, 0, prg03s05-in-f14.J
+Authority section (0):
+Additional section (0):
+```
+
 \section{Závěr}
 
-Program byl zkontrolován pomocí programu `valgrind-3.13.0`. V programu nedochází na žádné úniky paměti.
 
 \newpage
 

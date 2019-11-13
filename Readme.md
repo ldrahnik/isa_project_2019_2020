@@ -1,63 +1,54 @@
-TODO dokumentace:
+DNS Resolver
+============
 
-1) otestovat pomocí vagrantu a do dokumentace to uvést
-2) napsat do dokumentace do části upřesnění zadání, že parametr server jsem dal jako vyžadovaný
-3) napsat do dokumentace do části upřesnění zadání přidání debug parametru
-4) napsat do dokumentace do části upřesnění zadání, že kombinace -x a -6 není povolená
-5) napsat do dokumentace do části upřesnění zadání, že při zobrazování počítám pouze s class INTERNET
-6) timeout pro přijetí odpovědi je vyřešen 5 sekundami
-7) návratové kódy, pokud aplikace položí dotaz a vypíše úspěšně všechny výsledky i prázdný seznam výsledků, vrací návratový kód 0
+Program zasílá DNS dotaz na DNS server od kterého očekává odpověd. V DNS dotazu program umožnuje požadovat reverzní dotaz typu `PTR` pomocí parametru `-x`, IPv6 dotaz typu `AAAA` pomocí parametru `-6` nebo bez uvedení zmíněných parametrů defaultní typ `A`. Dále lze nastavit jiný port než defaultní `53` pomocí parametru `-p` a lze požadovat rekurzivní typ dotazu.
 
-EXTENSIONS:
+Příklad spuštění:
 
-1) udělat rpm balíček, případně tedy man stránku a uvést v dokumentaci
+```
+./dns -h`
+DNS resolver
 
-TODO:
+Usage:
 
-1) chyba, vypisuji TTL 0 místo TTL 14400 u dotazu a všude jinde: ./dns -r -s kazi.fit.vutbr.cz www.fit.vut.cz
+./dns [-r] [-x] [-6] -s server [-p port] address
 
-Co je OK:
+Any order of options is acceptable but all of them have to be before non-option inputs. Options:
+-r: Recursion is required (Recursion Desired = 1), otherwise no recursion
+-x: Reverse request is required instead of directly request
+-6: Use AAAA instead of default A
+-s: IP address or domain name of server where is request sent
+-p port: port number where is request sent, default 53
+host: requested hostname (when is active -x valid IPv4/IPv6 address)
+```
+./dns -x -r -s 8.8.8.8 172.217.23.206
 
-1) sudo valgrind --track-origins=yes --leak-check=full ./dns -s 147.229.8.12 www.fit.vutbr.cz
-
-Question section (1):
-  www.fit.vutbr.cz, A, IN
-Answer section (1):
-  www.fit.vutbr.cz, A, IN, 0, 147.229.9.23
-Authority section (4):
-  fit.vutbr.cz, NS, IN, gate.feec.vutbr.cz
-  fit.vutbr.cz, NS, IN, guta.fit.vutbr.cz
-  fit.vutbr.cz, NS, IN, kazi.fit.vutbr.cz
-  fit.vutbr.cz, NS, IN, rhino.cis.vutbr.cz
-Additional section (3):
-  guta.fit.vutbr.cz, A, IN, 0, 147.229.9.11
-  kazi.fit.vutbr.cz, A, IN, 0, 147.229.8.12
-  guta.fit.vutbr.cz, AAAA, IN, 0, 2001:067C:1220:0809:0000:0000:93E5:090B
-
-2) sudo valgrind --track-origins=yes --leak-check=full ./dns -6 -s 147.229.8.12 www.fit.vutbr.cz
-
-Question section (1):
-  www.fit.vutbr.cz, AAAA, IN
-Answer section (1):
-  www.fit.vutbr.cz, AAAA, IN, 0, 2001:067C:1220:0809:0000:0000:93E5:0917
-Authority section (4):
-  fit.vutbr.cz, NS, IN, gate.feec.vutbr.cz
-  fit.vutbr.cz, NS, IN, guta.fit.vutbr.cz
-  fit.vutbr.cz, NS, IN, kazi.fit.vutbr.cz
-  fit.vutbr.cz, NS, IN, rhino.cis.vutbr.cz
-Additional section (3):
-  guta.fit.vutbr.cz, A, IN, 0, 147.229.9.11
-  kazi.fit.vutbr.cz, A, IN, 0, 147.229.8.12
-  guta.fit.vutbr.cz, AAAA, IN, 0, 2001:067C:1220:0809:0000:0000:93E5:090B
-
-
-3) sudo valgrind --track-origins=yes --leak-check=full ./dns -r -s 8.8.8.8 clients4.google.com
 Authoritative: No, Recursive: Yes, Truncated: No
 
 Question section (1):
-  clients4.google.com, A, IN
+  206.23.217.172.in-addr.arpa, PTR, IN
 Answer section (2):
-  clients4.google.com, CNAME, IN, 0, clients.l.google.com
-  clients.l.google.com, A, IN, 0, 216.58.201.110
+  206.23.217.172.in-addr.arpa, PTR, IN, 0, prg03s05-in-f206.1e100.net
+  206.23.217.172.in-addr.arpa, PTR, IN, 0, prg03s05-in-f14.J
 Authority section (0):
-Additional section (0):
+Additional section (0): `
+```
+
+Omezení programu:
+
+1) chyba, vypisuji TTL 0 místo TTL 14400 atp. u všech dotazů
+
+Odevzdané soubory:
+
+```
+tar -cvzf xdrahn00.tar Makefile doc/manual.pdf doc/Makefile src/*.c src/*.h Readme.md
+Makefile
+doc/manual.pdf
+doc/Makefile
+src/dns.c
+src/params.c
+src/dns.h
+src/error.h
+src/params.h
+Readme.md
+```
