@@ -172,7 +172,9 @@ Additional section (0):
 
 K vytvoření RPM balíčku byl do projektu přidán soubor .spec, který obsahuje informaci o verzi programu, kde program stáhnu (případně by bylo možné stažení zakombinovat do prep sekce), jak projekt nainstaluji, s jakými soubory program manipuluje atd. Sekce install odkazuje na soubor Makefile na příkaz `make install`. Aby byly cesty relativní, je souboru Makefile předána proměnná BUILD\_ROOT.
 
-Na instalaci se doporučuje použít alien z důvodu ošetření závislostí a možnosti program odinstalovat. Nedoporučuje se neinstalovat přímo RPM nebo dokonce instalovat program z Makefile:
+Před spuštěním vytváření RPM balíčku je potřeba, aby se archiv projektu `v0.1.tar.gz` nacházel ve složce `/home/<USER>/rpmbuild/SOURCES/`.
+
+Na instalaci se doporučuje použít alien z důvodu ošetření závislostí a možnosti program odinstalovat. Nedoporučuje se instalovat RPM nebo dokonce instalovat program z Makefile:
 
   \lstset{language=Bash}
   \begin{lstlisting}[frame=single,breaklines]
