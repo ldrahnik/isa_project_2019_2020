@@ -43,7 +43,7 @@ Chybějící automatické testy, nefungující `make test` příkaz.
 ## Odevzdané soubory:
 
 ```
-tar -cvzf xdrahn00.tar Makefile doc/manual.pdf doc/Makefile src/*.c src/*.h Readme.md
+tar -cvzf xdrahn00.tar Makefile doc/manual.pdf src/*.c src/*.h Readme.md
 Makefile
 doc/manual.pdf
 src/dns.c
