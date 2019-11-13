@@ -44,8 +44,8 @@ rmtar:
 
 ################## INSTALL #########################
 
-BUILD_ROOT = ./
-VERSION	= 0.1
+BUILD_ROOT = 
+VERSION	=
 INSTALL_DIR	= $(BUILD_ROOT)/usr/lib/$(PROJECT_NAME)
 INSTALL_SOURCES = $(PROJECT_NAME)
 
