@@ -3,7 +3,7 @@ DNS Resolver
 
 Program zasílá DNS dotaz na DNS server od kterého očekává odpověd. V DNS dotazu program umožnuje požadovat reverzní dotaz typu `PTR` pomocí parametru `-x`, IPv6 dotaz typu `AAAA` pomocí parametru `-6` nebo bez uvedení zmíněných parametrů defaultní typ `A`. Dále lze nastavit jiný port než defaultní `53` pomocí parametru `-p` a lze požadovat rekurzivní typ dotazu.
 
-Příklad spuštění:
+## Příklad spuštění:
 
 ```
 ./dns -h
@@ -23,7 +23,6 @@ host: requested hostname (when is active -x valid IPv4/IPv6 address)
 ```
 ```
 ./dns -x -r -s 8.8.8.8 172.217.23.206
-
 Authoritative: No, Recursive: Yes, Truncated: No
 
 Question section (1):
@@ -35,11 +34,11 @@ Authority section (0):
 Additional section (0): `
 ```
 
-Omezení programu:
+## Omezení programu:
 
-1) chyba, vypisuji TTL 0 místo TTL 14400 atp. u všech dotazů
+TTL chyba, vypisuji TTL 0 místo TTL 14400 atp. u všech dotazů
 
-Odevzdané soubory:
+## Odevzdané soubory:
 
 ```
 tar -cvzf xdrahn00.tar Makefile doc/manual.pdf doc/Makefile src/*.c src/*.h Readme.md
