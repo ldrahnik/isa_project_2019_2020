@@ -21,6 +21,7 @@ Any order of options is acceptable but all of them have to be before non-option 
 -p port: port number where is request sent, default 53
 host: requested hostname (when is active -x valid IPv4/IPv6 address)
 ```
+```
 ./dns -x -r -s 8.8.8.8 172.217.23.206
 
 Authoritative: No, Recursive: Yes, Truncated: No
