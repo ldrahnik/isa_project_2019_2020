@@ -46,6 +46,10 @@
 
 \end{titlepage}
 
+\section{Úvod}
+
+Cílem projektu bylo si přečíst RFC dokumenty a na základě nich implementovat DNS klienta za pomoci standartních síťových knihoven. Veškeré nejasné informace ze zadání bylo požadováno uvést do bloku Upřesnění zadání.
+
 \section{Upřesnění zadání}
 
 Program obsahuje nápovědu po zavolání parametru `-h`. Parametr server `-s` je nastavený jako povinný, v programu proto není nastavený defaultni server. Program obsahuje proti zadání možnost si zapnout debugovací režim `-d`. V zadání není přesně uvedené, že je kombinace reverzního typu dotazu PTR aktivovaného přepínačem `-x` a IPv6 typu dotazu `AAAA` aktivovaného přepínačem `-6` zakázaná, ale typ dotazu můžu být pouze jeden a proto není v programu tato kombinace povolená. Pokud je položen dotaz, na tento dotaz je přijata odpověď a program vypíše všechny výsledky (včetně prázdného seznamu výsledků), program vrací návratový kód `0`. Specifické návratové kódy jsou popsány v kategorii `Návratové kódy programu`. Program počítá s/kontroluje v odpovědích třídu internet `IN`.
@@ -112,6 +116,14 @@ Program byl otestován pomocí nástroje `Valgrind`. Veškerá paměť alokovan�
 
 test citate \cite{test_citate}
 
+\subsection{Testování v referenčním prostředí}
+
+TODO: překlad a teestování na eva/merlin
+
+TODO: všechny 3 RFC uvést do citací a do úvodu do závorky a ještě ke strukturám.
+
+test citate \cite{test_citate}
+
 \section{Ukázka spuštění}
 
 Ukázka spustění s defaultním IPv4 typem dotazu `A`:
@@ -167,7 +179,7 @@ Additional section (0):
 
 \section{Závěr}
 
-Vývoj programu ověřil, že RFC obsahují veškeré potřebné informace pro vývoj DNS klienta a že existuje spousta podpůrných hlavičkových souborů, které obsahují metody, které není potřeba znovu vytvářet a které usnadní práci při implementaci od zpracováním argumentů `getopt()` p práci s IP adresami po  
+Vývoj programu ověřil, že RFC obsahují veškeré potřebné informace pro vývoj DNS klienta a že existuje spousta podpůrných hlavičkových souborů, které obsahují metody, které není potřeba znovu vytvářet a které usnadní práci při implementaci.
 
 \newpage
 
