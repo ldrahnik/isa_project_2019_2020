@@ -23,9 +23,7 @@ sudo rm -rf %{buildroot}
 sudo make install BUILD_ROOT=%{buildroot} VERSION=%{version}
 
 %__spec_install_post
-/usr/lib/rpm/brp-compress
-/usr/lib/rpm/brp-strip
-/usr/lib/rpm/brp-strip-comment-note
+
 
 %clean
 sudo rm -rf %{buildroot}
