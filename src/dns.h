@@ -18,8 +18,12 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <netinet/ip_icmp.h>
 #include <errno.h>
+
+/* 
+ * Maximum packet size. Already contains netinet/ip.h in some versions. Has been overridden for sure.
+ */
+#define IP_MAXPACKET 65535
 
 /*
  * https://www.ietf.org/rfc/rfc1035.txt (3.2.4. CLASS values)
