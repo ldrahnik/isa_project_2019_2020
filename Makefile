@@ -64,7 +64,7 @@ install:
 	mkdir -p $(LICENSES_DIR)
 	install -m 0644 $(INSTALL_SOURCES) $(INSTALL_DIR)
 	install -m 0644 $(P_LICENSE) $(LICENSES_DIR)
-	install -m 0644 $(P_DOC_NAME) $(DOC_DIR)
+	install -m 0644 $(P_DOC_RESULT) $(DOC_DIR)
 	cd $(BUILD_ROOT) && sudo ln -sf /usr/lib/$(P_NAME)/$(P_NAME) $(BUILD_ROOT)/usr/bin/$(P_NAME)
 	sudo chmod 0755 $(INSTALL_DIR)/$(P_NAME)
 	install -m 0644 $(P_MAN_PAGE) $(MAN_DIR)
