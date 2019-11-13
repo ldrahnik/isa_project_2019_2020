@@ -6,7 +6,7 @@ Program zasílá DNS dotaz na DNS server od kterého očekává odpověd. V DNS 
 Příklad spuštění:
 
 ```
-./dns -h`
+./dns -h
 DNS resolver
 
 Usage:
