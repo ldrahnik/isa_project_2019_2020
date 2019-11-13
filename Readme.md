@@ -36,7 +36,9 @@ Additional section (0): `
 
 ## Omezení programu:
 
-TTL chyba, vypisuji TTL 0 místo TTL 14400 atp. u všech dotazů
+TTL chyba, program vypisuje TTL 0 místo TTL 14400 atp. u všech dotazů.
+
+Chybějící automatické testy, nefungující `make test` příkaz.
 
 ## Odevzdané soubory:
 
