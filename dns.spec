@@ -23,7 +23,9 @@ sudo rm -rf %{buildroot}
 sudo make install BUILD_ROOT=%{buildroot} VERSION=%{version}
 
 %__spec_install_post
-
+/usr/lib/rpm/brp-compress
+/usr/lib/rpm/brp-strip
+/usr/lib/rpm/brp-strip-comment-note
 
 %clean
 sudo rm -rf %{buildroot}
@@ -32,7 +34,7 @@ sudo rm -rf %{buildroot}
 %dir /usr/lib/%{name}/
 /usr/lib/%{name}/%{name}
 /usr/bin/%{name}
-/usr/share/man/man1/%{name}.1
+/usr/share/man/man1/%{name}.1.gz
 /usr/share/doc/%{name}/manual.pdf
 /usr/share/licenses/%{name}/LICENSE
 
