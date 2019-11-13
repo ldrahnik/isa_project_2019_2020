@@ -44,7 +44,6 @@ TTL chyba, vypisuji TTL 0 místo TTL 14400 atp. u všech dotazů
 tar -cvzf xdrahn00.tar Makefile doc/manual.pdf doc/Makefile src/*.c src/*.h Readme.md
 Makefile
 doc/manual.pdf
-doc/Makefile
 src/dns.c
 src/params.c
 src/dns.h

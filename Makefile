@@ -31,7 +31,7 @@ $(P_NAME): $(P_SOURCES) $(P_HEADERS)
 ################# ARCHIVE #########################
 
 A_NAME = xdrahn00
-A_FILES = Makefile $(P_DOC_RESULT) $(P_DOC_MAKEFILE) $(P_SOURCES) $(P_HEADERS) $(P_README)
+A_FILES = Makefile $(P_DOC_RESULT) $(P_SOURCES) $(P_HEADERS) $(P_README)
 
 tar:
 	tar -cvzf $(A_NAME).tar $(A_FILES)
