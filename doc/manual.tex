@@ -5,8 +5,6 @@
 \usepackage[IL2]{fontenc}
 \usepackage[utf8x]{inputenc}
 \usepackage{enumitem}
-\usepackage{scrextend}
-\usepackage{lscape}
 \usepackage{times}
 \usepackage{graphicx}
 \usepackage[T1]{fontenc}
@@ -41,7 +39,7 @@
 
 \section{Úvod}
 
-Cílem projektu bylo si přečíst RFC (\cite{rfc10135}, \cite{rfc13596}) dokumenty a na základě nich implementovat DNS klienta za pomoci standartních síťových knihoven. Veškeré nejasné informace ze zadání bylo požadováno uvést do bloku Upřesnění zadání.
+Cílem projektu bylo si přečíst RFC \cite{rfc10135}\cite{rfc13596} dokumenty a na základě nich implementovat DNS klienta za pomoci standartních síťových knihoven. Veškeré nejasné informace ze zadání bylo požadováno uvést do bloku Upřesnění zadání.
 
 \section{Upřesnění zadání}
 
@@ -57,18 +55,16 @@ Poslání a přijetí odpovědi na samotný dotaz je vykonáno po zpracování a
 
 Program na zaslaný dotaz čeká 5 vteřin. Toto čekání je naimplementováno konfigurací socketu a nastavením timeoutu pro obdržení \textbf{SO\_RCVTIMEO}.
 
-Program se v odpovědi postupně posouvá pomocí ukazatele a vypisuje pomocí podpůrných metod jednotlivé \textbf{RR's}. Pro rozumění samotné odpovědi jsou nadefinovány dle informací z RFC(\cite{rfc10135}) struktury pro DNS hlavičku (která se vyplňuje při odesílání dotazu, ale vrací se stejně tak s dotazy - v našem případě vždy s jedním dotazem), dále pro samotný dotaz (variabilní délka, typ dotazu a třída) a nejdůležitější struktura pro samotné dotazy, která obsahuje 2 variabilní položky název před přesně stanovenými daty typ, třída, ttl a délka dat následujících po této položce. 
+Program se v odpovědi postupně posouvá pomocí ukazatele a vypisuje pomocí podpůrných metod jednotlivé \textbf{RR's}. Pro rozumění samotné odpovědi jsou nadefinovány dle informací z RFC\cite{rfc10135} struktury pro DNS hlavičku (která se vyplňuje při odesílání dotazu, ale vrací se stejně tak s dotazy - v našem případě vždy s jedním dotazem), dále pro samotný dotaz (variabilní délka, typ dotazu a třída) a nejdůležitější struktura pro samotné dotazy, která obsahuje 2 variabilní položky název před přesně stanovenými daty typ, třída, ttl a délka dat následujících po této položce. 
 
 \subsection{Formát výstupních dat}
 
 Výstupní formát dat kopíruje formát uvedený v zadání k programu:
 
-\begin{lstlisting}[frame=single]
+\begin{lstlisting}[frame=single, breaklines]
 Authoritative: No/Yes, Recursive: No/Yes, Truncated: No/Yes
 Question section (XY)
-  [domenove jmeno], [typ zaznamu - viz. podporovane typy zaznamu
-  ], [trida - jina nez IN neni podporovana], [ttl - v sekundach],
-  [ip adresa / domenove jmeno v pripade typu CNAME]
+  [domenove jmeno], [typ zaznamu - viz. podporovane typy zaznamu], [trida - jina nez IN neni podporovana], [ttl - v sekundach], [ip adresa / domenove jmeno v pripade typu CNAME]
 Answer section (XY)
 Authority section (XY)
 Additional section (XY)
@@ -119,7 +115,7 @@ Při překladu programu na serveru \textbf{eva.fit.vutbr.cz} bylo zjištěno, ž
 
 Ukázka spustění s defaultním IPv4 typem dotazu `A`:
 
-\begin{lstlisting}[frame=single]
+\begin{lstlisting}[frame=single,breaklines]
 ./dns -s 8.8.8.8 clients4.google.com
 Authoritative: No, Recursive: No, Truncated: No
 
@@ -136,7 +132,7 @@ Additional section (0):
 
 Ukázka spustění s nastaveným IPv6 typem dotazu \textbf{AAAA} aktivovaného použitím přepínače \textbf{-6}:
 
-\begin{lstlisting}[frame=single]
+\begin{lstlisting}[frame=single,breaklines]
 ./dns -6 -s 147.229.8.12 www.fit.vutbr.cz
 Authoritative: No, Recursive: No, Truncated: No
 
@@ -157,7 +153,7 @@ Additional section (3):
 
 Ukázka spuštění s nastaveným reverzním typem dotazu \textbf{PTR} akvivovaného přepínačem \textbf{-x} (je potřeba uvést validní IPv4/IPv6 adresu):
 
-\begin{lstlisting}[frame=single]
+\begin{lstlisting}[frame=single,breaklines]
 ./dns -x -r -s 8.8.8.8 172.217.23.206
 Authoritative: No, Recursive: Yes, Truncated: No
 
@@ -168,6 +164,53 @@ Answer section (2):
   206.23.217.172.in-addr.arpa, PTR, IN, 0, prg03s05-in-f14.J
 Authority section (0):
 Additional section (0):
+\end{lstlisting}
+
+\newpage
+
+\section{RPM balíček}
+
+K vytvoření RPM balíčku byl do projektu přidán soubor .spec, který obsahuje informaci o verzi programu, kde program stáhnu (případně by bylo možné stažení zakombinovat do prep sekce), jak projekt nainstaluji, s jakými soubory program manipuluje atd. Sekce install odkazuje na soubor Makefile na příkaz `make install`. Aby byly cesty relativní, je souboru Makefile předána proměnná BUILD\_ROOT.
+
+Na instalaci se doporučuje použít alien z důvodu ošetření závislostí a možnosti program odinstalovat. Nedoporučuje se neinstalovat přímo RPM nebo dokonce instalovat program z Makefile:
+
+  \lstset{language=Bash}
+  \begin{lstlisting}[frame=single,breaklines]
+
+  # USING MAKEFILE INSIDE PROJECT (THERE IS NO WAY HOW TO REMOVE, DO NOT DO IT)
+
+  sudo make install
+
+
+  # DIRECTLY FROM CREATED RPM
+
+  # build rpm
+  rpmbuild -ba <package-spec-file>.spec
+
+  # install rpm
+  rpm -Uvh <rpm-file>.rpm -v
+
+  # find package
+  rpm -qa | grep -i <package-name>
+
+  # uinstall
+  rpm -e <package-name>
+
+
+  # USING ALIEN (HIGHLY RECOMMENDED)
+
+  # build rpm
+  rpmbuild -ba <package-spec-file>.spec
+
+  # create .deb
+  sudo alien <rpm-file>.rpm
+
+  # install
+  sudo dpkg -i <package-name>.deb
+
+  # uinstall
+  sudo dpkg --remove <package-name>
+
 \end{lstlisting}
 
 \section{Závěr}

@@ -1,7 +1,7 @@
 DNS Resolver
 ============
 
-Program zasílá DNS dotaz na DNS server od kterého očekává odpověd. V DNS dotazu program umožnuje požadovat reverzní dotaz typu `PTR` pomocí parametru `-x`, IPv6 dotaz typu `AAAA` pomocí parametru `-6` nebo bez uvedení zmíněných parametrů defaultní typ `A`. Dále lze nastavit jiný port než defaultní `53` pomocí parametru `-p` a lze požadovat rekurzivní typ dotazu.
+Program zasílá DNS dotazy na DNS server od kterého očekává odpověd. V DNS dotazu program umožnuje požadovat reverzní dotaz typu `PTR` pomocí parametru `-x`, IPv6 dotaz typu `AAAA` pomocí parametru `-6` nebo bez uvedení zmíněných parametrů defaultní typ `A`. Dále lze nastavit jiný port než defaultní `53` pomocí parametru `-p` a lze požadovat rekurzivní typ dotazu.
 
 ## Příklad spuštění:
 
@@ -11,7 +11,7 @@ DNS resolver
 
 Usage:
 
-./dns [-r] [-x] [-6] -s server [-p port] address
+./dns [-r] [-x] [-6] -s server [-p port] hostname/IPv4/IPv6
 
 Any order of options is acceptable but all of them have to be before non-option inputs. Options:
 -r: Recursion is required (Recursion Desired = 1), otherwise no recursion
@@ -19,7 +19,7 @@ Any order of options is acceptable but all of them have to be before non-option 
 -6: Use AAAA instead of default A
 -s: IP address or domain name of server where is request sent
 -p port: port number where is request sent, default 53
-host: requested hostname (when is active -x valid IPv4/IPv6 address)
+hostname/IPv4/IPv6: requested hostname (when is active -x valid IPv4/IPv6 address)
 ```
 ```
 ./dns -x -r -s 8.8.8.8 172.217.23.206
@@ -40,16 +40,33 @@ TTL chyba, program vypisuje TTL 0 místo TTL 14400 atp. u všech dotazů.
 
 Chybějící automatické testy, nefungující `make test` příkaz.
 
+## Rozšíření programu:
+
+Vytvořená man stránka programu
+
+Vytvořený .spec soubor pro RPM balíček
+
+Vytvořený příkaz `make install`
+
 ## Odevzdané soubory:
 
 ```
-tar -cvzf xdrahn00.tar Makefile doc/manual.pdf src/*.c src/*.h Readme.md
-Makefile
-doc/manual.pdf
-src/dns.c
-src/params.c
-src/dns.h
-src/error.h
-src/params.h
-Readme.md
+tar -C xdrahn00 -xvf xdrahn00.tar
+tree xdrahn00
+xdrahn00
+├── dns.1
+├── dns.spec
+├── doc
+│   └── manual.pdf
+├── LICENSE
+├── Makefile
+├── Readme.md
+└── src
+    ├── dns.c
+    ├── dns.h
+    ├── error.h
+    ├── params.c
+    └── params.h
+
+2 directories, 11 files
 ```

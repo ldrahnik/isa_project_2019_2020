@@ -1,0 +1,40 @@
+.TH DNS resolver 1
+.SH NAME
+dns - zasílá DNS dotazy na DNS server
+.SH SYNOPSIS
+.B ./dns
+[OPTION]... [HOSTNAME]...
+.SH DESCRIPTION
+.B DNS resolver
+Program zasílá DNS dotazy na DNS server od kterého očekává odpověd.
+
+V DNS dotazu program umožnuje požadovat reverzní dotaz typu PTR pomocí parametru -x, IPv6 dotaz typu AAAA pomocí parametru -6 nebo bez uvedení zmíněných parametrů defaultní typ A. Dále lze nastavit jiný port než defaultní 53 pomocí parametru -p a lze požadovat rekurzivní typ dotazu.
+.SH OPTIONS
+.TP
+.BR \-h " "
+show help message
+.TP
+.BR \-r " "
+recursion is required (Recursion Desired = 1), otherwise no recursion
+.TP
+.BR \-x " "
+reverse request is required instead of directly request
+.TP
+.BR \-6 " "
+use AAAA instead of default A
+.TP
+.BR \-i " " <server>
+IP address or domain name of server where is request sent
+.TP
+.BR \-p " " <port>
+port number where is request sent, default 53
+.TP
+.BR <hostname>
+hostname/IPv4/IPv6: requested hostname (when is active -x valid IPv4/IPv6 address)
+
+.SH AUTHOR
+.TP
+Written by Lukas Drahnik.
+
+
+.\}
