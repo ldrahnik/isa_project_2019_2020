@@ -40,8 +40,6 @@ TTL chyba, program vypisuje TTL 0 místo TTL 14400 atp. u všech dotazů.
 
 Chybějící automatické testy, nefungující `make test` příkaz.
 
-Přesné požadavky na knihovny / verze knihoven v .spec souboru pro RPM balíček.
-
 ## Rozšíření programu:
 
 Vytvořená man stránka programu.

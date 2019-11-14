@@ -7,6 +7,7 @@ URL:                  https://github.com/ldrahnik/isa_project_2019_2020
 Source0:              https://github.com/ldrahnik/isa_project_2019_2020/archive/v%{version}.tar.gz
 BuildArch:            x86_64
 AutoReqProv:          yes
+Requires:             glibc
 
 %description
 Program zasílá DNS dotaz na DNS server od kterého očekává odpověd. V DNS dotazu program umožnuje požadovat reverzní dotaz typu PTR pomocí parametru -x, IPv6 dotaz typu AAAA pomocí parametru -6 nebo bez uvedení zmíněných parametrů defaultní typ A. Dále lze nastavit jiný port než defaultní 53 pomocí parametru -p a lze požadovat rekurzivní typ dotazu.
