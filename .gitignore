@@ -1,3 +1,5 @@
 dns
 *.tar
 *.deb
+/xdrahn00/*
+*~

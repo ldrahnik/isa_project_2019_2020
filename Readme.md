@@ -61,12 +61,14 @@ xdrahn00
 ├── LICENSE
 ├── Makefile
 ├── Readme.md
-└── src
-    ├── dns.c
-    ├── dns.h
-    ├── error.h
-    ├── params.c
-    └── params.h
+├── src
+│   ├── dns.c
+│   ├── dns.h
+│   ├── error.h
+│   ├── params.c
+│   └── params.h
+└── tests
+    └── tests.sh
 
 2 directories, 11 files
 ```
