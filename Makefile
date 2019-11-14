@@ -78,6 +78,14 @@ install:
 test:
 	bash ./tests/tests.sh $(PWD)/$(P_NAME)
 
+################### SERVER #########################
+
+server:
+	cd tests/server && make
+
+serverclean:
+	cd tests/server && make clean
+
 ################### DOC ############################
 
 tex:
@@ -91,3 +99,6 @@ clean:
 
 	# clean doc
 	cd ./doc/ && make clean
+
+	# clean server
+	cd tests/server && make clean

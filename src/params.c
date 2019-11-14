@@ -143,7 +143,7 @@ TParams getParams(int argc, char *argv[]) {
     return params;
   }
 
-  // for example catch this case: ./hpac "A B" -s f ggg
+  // for example catch this case: ./dns foo -s 127.0.0.1 bar
   if(argv[optind + 1] != NULL) {
     fprintf(stderr, "Option error. Please use optional options before non-options.\n");
     params.ecode = EOPT;

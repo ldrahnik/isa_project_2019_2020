@@ -19,6 +19,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <errno.h>
+#include <netdb.h>
 
 /* 
  * Maximum packet size. Already contains netinet/ip.h in some versions. Has been overridden for sure.

@@ -11,15 +11,17 @@ DNS resolver
 
 Usage:
 
-./dns [-r] [-x] [-6] -s server [-p port] hostname/IPv4/IPv6
+./dns [-h] [-r] [-x] [-6] -s server [-p port] hostname/IPv4/IPv6
 
 Any order of options is acceptable but all of them have to be before non-option inputs. Options:
+-h: Show help message
 -r: Recursion is required (Recursion Desired = 1), otherwise no recursion
 -x: Reverse request is required instead of directly request
 -6: Use AAAA instead of default A
 -s: IP address or domain name of server where is request sent
--p port: port number where is request sent, default 53
-hostname/IPv4/IPv6: requested hostname (when is active -x valid IPv4/IPv6 address)
+-p port: Port number where is request sent, default 53
+-d: Enable debug mode
+hostname/IPv4/IPv6: Requested hostname (when is active -x valid IPv4/IPv6 address)
 ```
 ```
 ./dns -x -r -s 8.8.8.8 172.217.23.206

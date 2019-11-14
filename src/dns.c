@@ -10,14 +10,16 @@
 const char *HELP_MSG = {
   "DNS resolver\n\n"	
   "Usage:\n\n"
-  "./dns [-r] [-x] [-6] -s server [-p port] hostname/IPv4/IPv6\n\n"
+  "./dns [-h] [-d] [-r] [-x] [-6] -s server [-p port] hostname/IPv4/IPv6\n\n"
   "Any order of options is acceptable but all of them have to be before non-option inputs. Options:\n"
+  "-h: Show help message\n"
+  "-d: Enable debug mode\n"
   "-r: Recursion is required (Recursion Desired = 1), otherwise no recursion\n"
   "-x: Reverse request is required instead of directly request\n"
   "-6: Use AAAA instead of default A\n"
   "-s: IP address or domain name of server where is request sent\n"
-  "-p port: port number where is request sent, default 53\n"
-  "hostname/IPv4/IPv6: requested hostname (when is active -x valid IPv4/IPv6 address)\n"
+  "-p port: Port number where is request sent, default 53\n"
+  "hostname/IPv4/IPv6: Requested hostname (when is active -x valid IPv4/IPv6 address)\n"
 };
 
 /* clean entire TParams structure */
