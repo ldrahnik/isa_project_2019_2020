@@ -49,9 +49,9 @@ Vytvořený .spec soubor pro RPM balíček.
 
 Vytvořený příkaz `make install`.
 
-Vytvořený server pro příkaz `sudo make test` pro zachytávání packetů a pro porovnávání obsahu s referenčním výstupem.
+Vytvořený jednoduchý server pro příkaz `sudo make test` pro zachytávání packetů a pro porovnávání obsahu s referenčním výstupem.
 
-## Testy:
+## Testování programu:
 
 ```
 sudo make test
