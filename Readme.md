@@ -43,9 +43,9 @@ TTL chyba, program bohužel vypisuje TTL 0 místo TTL 14400 atp. u všech dotaz�
 
 ## Rozšíření programu:
 
-Vytvořená man stránka programu.
+Vytvořená man stránka programu `dns.1`.
 
-Vytvořený .spec soubor pro RPM balíček.
+Vytvořený .spec soubor pro RPM balíček `dns.spec`.
 
 Vytvořený příkaz `make install`.
 
