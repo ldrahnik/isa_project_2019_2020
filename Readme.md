@@ -68,8 +68,6 @@ bash ./tests/tests.sh /dns
 ## Odevzdané soubory:
 
 ```
-tar -C xdrahn00 -xvf xdrahn00.tar
-tree xdrahn00
 xdrahn00
 ├── dns.1
 ├── dns.spec
@@ -85,6 +83,8 @@ xdrahn00
 │   ├── params.c
 │   └── params.h
 └── tests
+    ├── logs
+    │   └── server_log
     ├── ref
     │   ├── 1
     │   ├── 2
@@ -102,5 +102,5 @@ xdrahn00
     │       └── server.h
     └── tests.sh
 
-6 directories, 24 files
+7 directories, 25 files
 ```
