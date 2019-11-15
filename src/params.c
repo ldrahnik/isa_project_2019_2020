@@ -22,6 +22,7 @@ TParams getParams(int argc, char *argv[]) {
     .ecode = EOK,
     .recursion_desired = 0,
     .reverse_lookup = 0,
+    .timeout = 5,
     .ipv6 = 0,
     .server = NULL,
     .port = 53,
@@ -33,7 +34,7 @@ TParams getParams(int argc, char *argv[]) {
 
   // getopt
   int c;
-  while ((c = getopt(argc, argv, "hdrx6s:p:")) != -1) {
+  while ((c = getopt(argc, argv, "hdrt:x6s:p:")) != -1) {
     switch (c) {
       case 'h':
         if(params.show_help_message) {
@@ -58,6 +59,9 @@ TParams getParams(int argc, char *argv[]) {
           return params;
 	    }
         params.recursion_desired = 1;
+        break;
+      case 't':
+        params.timeout = atoi(optarg);
         break;
       case 'x':
         if(params.reverse_lookup) {

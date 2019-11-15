@@ -11,11 +11,12 @@ DNS resolver
 
 Usage:
 
-./dns [-h] [-r] [-x] [-6] -s server [-p port] hostname/IPv4/IPv6
+./dns [-h] [-r] [-t timeout] [-x] [-6] -s server [-p port] hostname/IPv4/IPv6
 
 Any order of options is acceptable but all of them have to be before non-option inputs. Options:
 -h: Show help message
 -r: Recursion is required (Recursion Desired = 1), otherwise no recursion
+-t: Timeout on receiving packets, default 5 seconds
 -x: Reverse request is required instead of directly request
 -6: Use AAAA instead of default A
 -s: IP address or domain name of server where is request sent
@@ -38,9 +39,7 @@ Additional section (0): `
 
 ## Omezení programu:
 
-TTL chyba, program vypisuje TTL 0 místo TTL 14400 atp. u všech dotazů.
-
-Chybějící automatické testy, nefungující `make test` příkaz.
+TTL chyba, program bohužel vypisuje TTL 0 místo TTL 14400 atp. u všech dotazů.
 
 ## Rozšíření programu:
 
@@ -49,6 +48,22 @@ Vytvořená man stránka programu.
 Vytvořený .spec soubor pro RPM balíček.
 
 Vytvořený příkaz `make install`.
+
+Vytvořený server pro příkaz `sudo make test` pro zachytávání packetů a pro porovnávání obsahu s referenčním výstupem.
+
+## Testy:
+
+```
+sudo make test
+bash ./tests/tests.sh /dns
+*******TEST 1 PASSED
+*******TEST 1.1 PASSED
+*******TEST 1.2 PASSED
+*******TEST 2 PASSED
+*******TEST 3 PASSED
+*******TEST 4 PASSED
+*******TEST 5 PASSED
+```
 
 ## Odevzdané soubory:
 
@@ -70,7 +85,22 @@ xdrahn00
 │   ├── params.c
 │   └── params.h
 └── tests
+    ├── ref
+    │   ├── 1
+    │   ├── 2
+    │   ├── 3
+    │   ├── 4
+    │   └── 5
+    ├── server
+    │   ├── Makefile
+    │   ├── Readme.md
+    │   └── src
+    │       ├── dns.h
+    │       ├── params.c
+    │       ├── params.h
+    │       ├── server.c
+    │       └── server.h
     └── tests.sh
 
-2 directories, 11 files
+6 directories, 24 files
 ```

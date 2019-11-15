@@ -30,6 +30,7 @@ typedef struct params {
   uint16_t show_help_message :1; // show help message
   uint16_t debug :1; // debug
   uint16_t recursion_desired :1; // option -r
+  uint16_t timeout; // option -t
   uint16_t reverse_lookup :1; // option -x
   uint16_t ipv6 :1; // option -6
   char* server; // option -s server

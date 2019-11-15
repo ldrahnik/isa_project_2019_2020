@@ -412,7 +412,7 @@ int dnsResolver(TParams params) {
 
   // timeout
   struct timeval tv;
-  tv.tv_sec = 5;
+  tv.tv_sec = params.timeout;
   tv.tv_usec = 0;
   if(setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof tv) != 0) {
     perror("setsockopt()");

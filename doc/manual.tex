@@ -97,6 +97,10 @@ Pokud je položen dotaz, na tento dotaz je přijata odpověd’ a program vypí�
 
 \section{Testování}
 
+Byl vytvořen jednoduchý testovací server. Server odchytává pakety na určeném portu \textbf{-p} a jejich obsah vypisuje na stdout. Parametrem \textbf{-e} lze nastavit, aby server odchytnul pouze první packet, ten vypsal a pak se ukončil.
+
+Testovací bash script spuštěný příkazem \textbf{sudo make test} spustí server na pozadí pro 1 příchozí packet a výstup / příchozí packet přesměruje do souboru, poté spustí program s konkrétním požadavkem. Pro porovnání byl použit nástroj \textbf{diff}.
+
 \subsection{Debugovací režim}
 
 Debugovací režim se aktivuje po uvedení option \textbf{-d}. Při zapnutém debugovacím režimu jsou vypisovány důležité informace sloužící především pro ladění programu, tedy pro případné odhalení chyby v programu, ale i pro větší pochopení jak program funguje. Tyto zprávy obsahují například konverze ze standartního zápisu doménového jména na zápis používaný v posílaném dotazu a naopak, konverze IP adres nebo přijatá data získaná z odpovědi před posouzením zda jsou správná. Veškeré zprávy směřují na standartní chybový výstup.

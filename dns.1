@@ -8,7 +8,7 @@ dns - zasílá DNS dotazy na DNS server
 .B DNS resolver
 Program zasílá DNS dotazy na DNS server od kterého očekává odpověd.
 
-V DNS dotazu program umožnuje požadovat reverzní dotaz typu PTR pomocí parametru -x, IPv6 dotaz typu AAAA pomocí parametru -6 nebo bez uvedení zmíněných parametrů defaultní typ A. Dále lze nastavit jiný port než defaultní 53 pomocí parametru -p a lze požadovat rekurzivní typ dotazu.
+V DNS dotazu program umožnuje požadovat reverzní dotaz typu PTR pomocí parametru -x, IPv6 dotaz typu AAAA pomocí parametru -6 nebo bez uvedení zmíněných parametrů defaultní typ A. Dále lze nastavit jiný port než defaultní 53 pomocí parametru -p, lze ovlivnit dobu čekání na packet pomocí -t a lze požadovat rekurzivní typ dotazu -r.
 .SH OPTIONS
 .TP
 .BR \-h " "
@@ -16,6 +16,9 @@ show help message
 .TP
 .BR \-r " "
 recursion is required (Recursion Desired = 1), otherwise no recursion
+.TP
+.BR \-t " "
+timeout, default 5
 .TP
 .BR \-x " "
 reverse request is required instead of directly request
