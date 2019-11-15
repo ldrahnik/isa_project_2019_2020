@@ -39,13 +39,13 @@ Additional section (0): `
 
 ## Omezení programu:
 
-TTL chyba, program bohužel vypisuje TTL 0 místo TTL 14400 atp. u všech dotazů.
+Chybné zobrazení TTL, program bohužel vypisuje TTL 0 místo TTL 14400 atp. u všech dotazů.
 
 ## Rozšíření programu:
 
 Vytvořená man stránka programu `dns.1`.
 
-Vytvořený .spec soubor pro RPM balíček `dns.spec`.
+Vytvořený `dns.spec` soubor pro RPM balíček.
 
 Vytvořený příkaz `make install`.
 
