@@ -41,8 +41,6 @@ Additional section (0): `
 
 Chybné zobrazení TTL, program bohužel vypisuje TTL 0 místo TTL 14400 atp. u všech dotazů.
 
-`Select(): Invalid argument` při `make test` na serveru merlin.fit.vutbr.cz.
-
 ## Rozšíření programu:
 
 Vytvořená man stránka programu `dns.1`.
