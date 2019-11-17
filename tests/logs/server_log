@@ -1,0 +1,15 @@
+########
+rd 1
+tc 0
+aa 0
+opcode 0
+qr 0
+rcode 0
+z 0
+ra 0
+qdcount 1
+qname b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.0.0.0.0.1.2.3.4.ip6.arpa
+qtype 12
+qclass 1
+########
+

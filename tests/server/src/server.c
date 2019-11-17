@@ -32,6 +32,7 @@ void catchsignal(int sig) {
 int dnsServer(TParams params) {
 
   int s;
+  int s_flags;
   fd_set my_set;
   struct timeval tv;
   socklen_t size;
@@ -52,6 +53,11 @@ int dnsServer(TParams params) {
     perror("socket()");
     return EXIT_FAILURE;
   }
+
+  // setup socket (non-block)
+  int fd = 0;
+  s_flags = fcntl(s, F_GETFL, 0);
+  fcntl(fd, F_SETFL, s_flags | O_NONBLOCK);
 
   // bind
   if((bind(s, (struct sockaddr *)&server_addr_in, sizeof(server_addr_in)) == -1)) {
