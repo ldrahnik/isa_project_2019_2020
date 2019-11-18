@@ -41,7 +41,7 @@ tar:
 	tar -cvzf $(A_NAME).tar $(A_FILES)
 
 untar:
-	mkdir -p $(A_NAME) && tar -C $(A_NAME) -xvzf $(A_NAME).tar
+	rm -rf $(A_NAME) && mkdir -p $(A_NAME) && tar -C $(A_NAME) -xvzf $(A_NAME).tar
 
 rmtar:
 	rm -f $(A_NAME).tar
