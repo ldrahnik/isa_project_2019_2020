@@ -67,7 +67,7 @@ int readHostFromResourceRecord(unsigned char* response, unsigned char* buffer, u
 
   // clean
   free(name);
-
+	
   return EOK;
 }
 
@@ -193,7 +193,7 @@ void readDataFromResourceRecord(unsigned char* response, unsigned char* buffer, 
 int printfIPv4Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* rname) {
 
   uint32_t rdata_length = ntohs(dns_rr_data->rdlength);
-  uint32_t rttl = ntohs(dns_rr_data->rttl);
+  uint32_t rttl = ntohl(dns_rr_data->rttl);
 
   struct sockaddr_in addr_in;
   long *p;
@@ -219,7 +219,7 @@ int printfIPv4Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned
 int printfNSRecord(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* receive_buffer, unsigned char* rname, uint32_t* rname_length, int debug) {
 
   int ecode;
-  uint32_t rttl = ntohs(dns_rr_data->rttl);
+  uint32_t rttl = ntohl(dns_rr_data->rttl);
 
   unsigned char* buffer = (unsigned char*)malloc(MAX_NAME_LENGTH + 1);
   if(buffer == NULL) {
@@ -243,7 +243,7 @@ int printfNSRecord(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned c
 int printfCanonicalNameRecord(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* receive_buffer, unsigned char* rname, uint32_t* rname_length, int debug) {
 
   int ecode;
-  uint32_t rttl = ntohs(dns_rr_data->rttl);
+  uint32_t rttl = ntohl(dns_rr_data->rttl);
 
   unsigned char* buffer = (unsigned char*)malloc(MAX_NAME_LENGTH + 1);
   if(buffer == NULL) {
@@ -268,7 +268,7 @@ int printfIPv6Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned
 
   uint8_t ecode;
   uint32_t rdata_length = ntohs(dns_rr_data->rdlength);
-  uint32_t rttl = ntohs(dns_rr_data->rttl);
+  uint32_t rttl = ntohl(dns_rr_data->rttl);
 
   unsigned char* rdata_buffer = (unsigned char*)malloc(rdata_length + 1);
   if(rdata_buffer == NULL) {
@@ -300,7 +300,7 @@ int printfDomainNamePointerRecord(unsigned char* response, DNS_RR_Data* dns_rr_d
 
   //uint8_t ecode;
   uint32_t rdata_length = ntohs(dns_rr_data->rdlength);
-  uint32_t rttl = ntohs(dns_rr_data->rttl);
+  uint32_t rttl = ntohl(dns_rr_data->rttl);
 
   unsigned char* buffer = (unsigned char*)malloc(MAX_NAME_LENGTH + 1);
   if(buffer == NULL) {
@@ -525,9 +525,9 @@ int dnsResolver(TParams params) {
     rdata_length = ntohs(dns_rr_data->rdlength);
 
     if(params.debug) {
-      fprintf(stderr, "DEBUG: RR type: `%i`\n", ntohs(dns_rr_data->rtype));
+      fprintf(stderr, "DEBUG: RR type: `%i`\n", dns_rr_data->rtype);
       fprintf(stderr, "DEBUG: RR class: `%i`\n", ntohs(dns_rr_data->rclass));
-      fprintf(stderr, "DEBUG: RR ttl: `%i`\n", ntohs(dns_rr_data->rttl));
+      fprintf(stderr, "DEBUG: RR ttl: `%i`\n", ntohl(dns_rr_data->rttl));
       fprintf(stderr, "DEBUG: RR rdlength: %i\n", ntohs(dns_rr_data->rdlength));
     }
 
@@ -576,7 +576,7 @@ int dnsResolver(TParams params) {
     if(params.debug) {
       fprintf(stderr, "DEBUG: RR type: `%i`\n", ntohs(dns_rr_data->rtype));
       fprintf(stderr, "DEBUG: RR class: `%i`\n", ntohs(dns_rr_data->rclass));
-      fprintf(stderr, "DEBUG: RR ttl: `%i`\n", ntohs(dns_rr_data->rttl));
+      fprintf(stderr, "DEBUG: RR ttl: `%i`\n", ntohl(dns_rr_data->rttl));
       fprintf(stderr, "DEBUG: rdlength: %i\n", ntohs(dns_rr_data->rdlength));
     }
 
@@ -611,7 +611,7 @@ int dnsResolver(TParams params) {
     if(params.debug) {
       fprintf(stderr, "DEBUG: RR type: `%i`\n", ntohs(dns_rr_data->rtype));
       fprintf(stderr, "DEBUG: RR class: `%i`\n", ntohs(dns_rr_data->rclass));
-      fprintf(stderr, "DEBUG: RR ttl: `%i`\n", ntohs(dns_rr_data->rttl));
+      fprintf(stderr, "DEBUG: RR ttl: `%i`\n", ntohl(dns_rr_data->rttl));
       fprintf(stderr, "DEBUG: rdlength: %i\n", ntohs(dns_rr_data->rdlength));
     }
 

@@ -39,8 +39,6 @@ Additional section (0): `
 
 ## Omezení programu:
 
-Chybné zobrazení TTL, program bohužel vypisuje TTL 0 místo TTL 14400 atp. u všech dotazů.
-
 ## Rozšíření programu:
 
 Vytvořená man stránka programu `dns.1`.

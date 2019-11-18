@@ -62,4 +62,4 @@ if diff $TEST_DIRECTORY/logs/server_log $TEST_DIRECTORY/ref/5 >/dev/null; then
     echo "*******TEST 5 PASSED";
 else
     echo "TEST 5 FAILED";
-fi
+fi  
