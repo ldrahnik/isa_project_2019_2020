@@ -93,8 +93,7 @@ typedef struct dns_rr_data
     uint16_t rtype;
     uint16_t rclass;
     int rttl;
-    uint16_t rdlength
-;
+    uint16_t rdlength;
 } DNS_RR_Data;
 // unsigned char *rdata; (variable length)
 #pragma pack(pop)
