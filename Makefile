@@ -38,6 +38,10 @@ A_NAME = xdrahn00
 A_FILES = Makefile $(P_DOC_RESULT) $(P_SOURCES) $(P_HEADERS) $(P_README) $(P_MAN_PAGE) $(P_SPEC) $(P_LICENSE) $(P_TESTS)
 
 tar:
+	# build doc
+	make tex
+
+	# pack
 	tar -cvzf $(A_NAME).tar $(A_FILES)
 
 untar:
