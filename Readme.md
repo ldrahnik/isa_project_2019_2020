@@ -77,7 +77,7 @@ xdrahn00/
 ├── LICENSE
 ├── Makefile
 ├── manual.pdf
-├── Readme.md
+├── README
 ├── src
 │   ├── dns.c
 │   ├── dns.h
