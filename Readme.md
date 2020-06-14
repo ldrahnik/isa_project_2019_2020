@@ -71,13 +71,12 @@ bash ./tests/tests.sh /dns
 ## Odevzdané soubory:
 
 ```
-xdrahn00
+xdrahn00/
 ├── dns.1
 ├── dns.spec
-├── doc
-│   └── manual.pdf
 ├── LICENSE
 ├── Makefile
+├── manual.pdf
 ├── Readme.md
 ├── src
 │   ├── dns.c
@@ -105,5 +104,5 @@ xdrahn00
     │       └── server.h
     └── tests.sh
 
-7 directories, 25 files
+6 directories, 25 files
 ```

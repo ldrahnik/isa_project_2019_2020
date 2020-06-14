@@ -11,8 +11,8 @@ P_DOC_NAME = manual
 P_LICENSE = LICENSE
 P_MAN_PAGE = dns.1
 P_SPEC = dns.spec
-P_DOC_SOURCE = doc/$(P_DOC_NAME).tex
-P_DOC_RESULT = doc/$(P_DOC_NAME).pdf
+P_DOC_FOLDER = doc/
+P_DOC_RESULT = $(P_DOC_NAME).pdf
 P_DOC_MAKEFILE = doc/Makefile
 P_README = Readme.md
 P_TESTS = tests/tests.sh tests/ref/* tests/server/src/*.c tests/server/src/*.h tests/server/Makefile tests/server/Readme.md tests/logs/server_log
@@ -35,14 +35,14 @@ $(P_NAME): $(P_SOURCES) $(P_HEADERS)
 ################# ARCHIVE #########################
 
 A_NAME = xdrahn00
-A_FILES = Makefile $(P_DOC_RESULT) $(P_SOURCES) $(P_HEADERS) $(P_README) $(P_MAN_PAGE) $(P_SPEC) $(P_LICENSE) $(P_TESTS)
+A_FILES = Makefile $(P_SOURCES) $(P_HEADERS) $(P_README) $(P_MAN_PAGE) $(P_SPEC) $(P_LICENSE) $(P_TESTS) # exceptions are archive files placed in subfolders 
 
 tar:
 	# build doc
 	make tex
 
 	# pack
-	tar -cvzf $(A_NAME).tar $(A_FILES)
+	tar -cvzf $(A_NAME).tar $(A_FILES) -C $(P_DOC_FOLDER) $(P_DOC_RESULT)
 
 untar:
 	rm -rf $(A_NAME) && mkdir -p $(A_NAME) && tar -C $(A_NAME) -xvzf $(A_NAME).tar
