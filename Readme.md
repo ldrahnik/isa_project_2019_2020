@@ -1,3 +1,8 @@
+ASSESSMENT 
+==========
+
+14.5/20b (https://github.com/ldrahnik/isa_project_2019_2020/issues)
+
 DNS Resolver
 ============
 
