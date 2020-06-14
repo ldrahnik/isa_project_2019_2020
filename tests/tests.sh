@@ -39,7 +39,6 @@ fi
 # 3 (AAAA type)
 $TEST_DIRECTORY/server/server -e -p $PORT > $TEST_DIRECTORY/logs/server_log &
 $TEST_DIRECTORY/../dns -6 -r -s localhost -p $PORT  -t 1 www.fit.vutbr.cz > /dev/null 2>&1
-diff $TEST_DIRECTORY/logs/server_log $TEST_DIRECTORY/ref/3
 if diff $TEST_DIRECTORY/logs/server_log $TEST_DIRECTORY/ref/3 >/dev/null; then
     echo "*******TEST 3 PASSED";
 else
