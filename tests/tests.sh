@@ -28,6 +28,15 @@ else
     echo "TEST 1.1 FAILED";
 fi
 
+# 1.2 (IPv6 server)
+$TEST_DIRECTORY/server/server -e -p $PORT > $SERVER_LOG_FILE &
+$TEST_DIRECTORY/../dns -s ::1 -p $PORT www.fit.vutbr.cz > /dev/null 2>&1
+if diff $SERVER_LOG_FILE $TEST_DIRECTORY/ref/1 >/dev/null; then
+    echo "*******TEST 1.2 PASSED";
+else
+    echo "TEST 1.2 FAILED";
+fi
+
 # 2 (recursion)
 $TEST_DIRECTORY/server/server -e -p $PORT > $SERVER_LOG_FILE &
 $TEST_DIRECTORY/../dns -r -s localhost -p $PORT  -t 1 www.fit.vutbr.cz > /dev/null 2>&1
