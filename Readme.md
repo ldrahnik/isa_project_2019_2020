@@ -16,7 +16,7 @@ DNS resolver
 
 Usage:
 
-./dns [-h] [-r] [-t timeout] [-x] [-6] -s server [-p port] hostname/IPv4/IPv6
+./dns [-h] [-r] [-t timeout] [-x] [-6] -s server [-p port] [-d] hostname/IPv4/IPv6
 
 Any order of options is acceptable but all of them have to be before non-option inputs. Options:
 -h: Show help message
@@ -45,6 +45,8 @@ Additional section (0): `
 ## Omezení programu:
 
 ## Rozšíření programu:
+
+Přidaný volitelný debugovací parametr `[-d]`.
 
 Vytvořená man stránka programu `dns.1`.
 

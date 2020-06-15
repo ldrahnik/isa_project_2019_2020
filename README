@@ -37,6 +37,7 @@ Omezení programu:
 
 Rozšíření programu:
 
+Přidaný volitelný debugovací parameter `[-d]`.
 Vytvořená man stránka programu dns.1.
 Vytvořený dns.spec soubor pro RPM balíček.
 Vytvořený příkaz make install.
