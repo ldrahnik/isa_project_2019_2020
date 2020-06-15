@@ -29,17 +29,29 @@ Any order of options is acceptable but all of them have to be before non-option 
 -d: Enable debug mode
 hostname/IPv4/IPv6: Requested hostname (when is active -x valid IPv4/IPv6 address)
 ```
+
 ```
-./dns -x -r -s 8.8.8.8 172.217.23.206
+./dns -x -r -s kazi.fit.vutbr.cz 147.229.9.23
 Authoritative: No, Recursive: Yes, Truncated: No
 
 Question section (1):
-  206.23.217.172.in-addr.arpa, PTR, IN
-Answer section (2):
-  206.23.217.172.in-addr.arpa, PTR, IN, 0, prg03s05-in-f206.1e100.net
-  206.23.217.172.in-addr.arpa, PTR, IN, 0, prg03s05-in-f14.J
+  23.9.229.147.in-addr.arpa., PTR, IN
+Answer section (1):
+  23.9.229.147.in-addr.arpa., PTR, IN, 14400, www.fit.vutbr.cz.
 Authority section (0):
-Additional section (0): `
+Additional section (0):
+```
+
+```
+./dns -x -r -s kazi.fit.vutbr.cz 2001:67c:1220:809::93e5:917
+Authoritative: No, Recursive: Yes, Truncated: No
+
+Question section (1):
+  7.1.9.0.5.e.3.9.0.0.0.0.0.0.0.0.9.0.8.0.0.2.2.1.c.7.6.0.1.0.0.2.ip6.arpa., PTR, IN
+Answer section (1):
+  7.1.9.0.5.e.3.9.0.0.0.0.0.0.0.0.9.0.8.0.0.2.2.1.c.7.6.0.1.0.0.2.ip6.arpa., PTR, IN, 14400, www.fit.vutbr.cz.
+Authority section (0):
+Additional section (0):
 ```
 
 ## Omezení programu:
