@@ -107,7 +107,7 @@ int convertIPv6FromBinaryFormToShortestReadableForm(unsigned char* rdata, unsign
   return EOK;
 }
 
-/* converts 3www3fit5vutbr2cz0 -> www.fit.vutbr.cz */
+/* converts 3www3fit5vutbr2cz0 -> www.fit.vutbr.cz. */
 void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* host, int debug) {
   uint32_t i, j, last_number_index = 0;
 
@@ -129,10 +129,12 @@ void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* hos
     }
   }
 
-  if(i > 0)
-    host[i - 1] = '\0';
-  else
+  if(i > 0) {
+    host[i - 1] = '.';
+    host[i] = '\0';
+  } else {
     host[0] = '\0';
+  }
 
   if(debug)
     fprintf(stderr, "DEBUG: convertHostFromDNSFormat() given host: `%s`\n", host);
