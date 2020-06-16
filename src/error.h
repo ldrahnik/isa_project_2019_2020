@@ -18,6 +18,7 @@ enum ecodes {
   ERECEIVEFROM = 5, // receivefrom() function problem
   EMALFORMEDPACKET = 6, // returned packet is not correctly received
   ESETSOCKETOPT = 7, // setsockopt()
+  EGETADDRINFO = 8, // getaddrinfo()
 };
 
 #endif

@@ -141,7 +141,7 @@ TParams getParams(int argc, char *argv[]) {
   }
 
   // validate given server
-  if(isHostValid(params.server) != 0) {
+  if(!isHostValid(params.server)) {
     fprintf(stderr, "Option error. Given server is not valid.\n");
     params.ecode = EOPT;
     return params;
@@ -334,7 +334,7 @@ int isHostValid(char* node) {
   hints.ai_protocol = 0;
   hints.ai_flags = AI_ADDRCONFIG;
 
-  if(getaddrinfo(node, NULL, &hints, &results) != 0) {
+  if(getaddrinfo(node, NULL, &hints, &results) == 0) {
     return 1;
   }
 

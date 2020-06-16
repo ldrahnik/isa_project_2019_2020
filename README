@@ -42,6 +42,16 @@ Answer section (1):
 Authority section (0):
 Additional section (0):
 
+./dns -x -r -s 2001:4860:4860::8844 147.229.9.23
+Authoritative: No, Recursive: Yes, Truncated: No
+
+Question section (1):
+  23.9.229.147.in-addr.arpa., PTR, IN
+Answer section (1):
+  23.9.229.147.in-addr.arpa., PTR, IN, 14399, www.fit.vutbr.cz.
+Authority section (0):
+Additional section (0):
+
 Omezení programu:
 
 Rozšíření programu:

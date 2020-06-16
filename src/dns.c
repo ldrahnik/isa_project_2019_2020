@@ -322,11 +322,10 @@ int printfDomainNamePointerRecord(unsigned char* response, DNS_RR_Data* dns_rr_d
 }
 
 /* handles process of dns request and response */
-int dnsResolver(TParams params) {
+int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct sockaddr_in6 server_addr6, int serverIsIpv6) {
   int ecode = EOK;
 
   // allocated variables
-  struct addrinfo *server = NULL;
   unsigned char* send_buffer = NULL;
   unsigned char* receive_buffer = NULL;
   unsigned char* rname = NULL;
@@ -344,29 +343,6 @@ int dnsResolver(TParams params) {
     fprintf(stderr, "Allocation fails.\n");
     return EALLOC;
   }
-
-  // create socket
-  int s;
-  if((s = socket(AF_INET , SOCK_DGRAM , IPPROTO_UDP)) == -1) {
-    fprintf(stderr, "Socket can not be created.\n");
-    return ESOCKET;
-  }
-
-  // server address
-  struct addrinfo hints;
-  memset(&hints, 0, sizeof(struct addrinfo));
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_DGRAM;
-  hints.ai_protocol = 0;
-  hints.ai_flags = AI_ADDRCONFIG;
-  getaddrinfo(params.server, NULL, &hints, &server);
-
-  struct sockaddr_in server_addr;
-  memset(&server_addr, 0, sizeof(struct sockaddr_in));
-  server_addr.sin_addr = ((struct sockaddr_in*)server->ai_addr)->sin_addr;
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_port = htons(params.port);
-
 
   // add address
   unsigned char* qname = (unsigned char*)(send_buffer + sizeof(DNS_Header));
@@ -403,70 +379,69 @@ int dnsResolver(TParams params) {
   }
   dns_question->qclass = CLASS_IN;
 
-  if(sendto(s, (char*) send_buffer, sizeof(DNS_Header) + (strlen((const char*)qname) + 2) + sizeof(DNS_Question), 0, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
-  {
+  int sendToReturnValue = 0;
+  if(serverIsIpv6) {
+    sendToReturnValue = sendto(sock, (char*)send_buffer, sizeof(DNS_Header) + (strlen((const char*)qname) + 2) + sizeof(DNS_Question), 0, (struct sockaddr*)&server_addr6, sizeof(server_addr6));
+  } else {
+    sendToReturnValue = sendto(sock, (char*)send_buffer, sizeof(DNS_Header) + (strlen((const char*)qname) + 2) + sizeof(DNS_Question), 0, (struct sockaddr*)&server_addr, sizeof(server_addr));
+  }
+  if(sendToReturnValue < 0) {
     perror("sendto()");
+    cleanDNSResources(rname, send_buffer, receive_buffer);
     return ESENDTO;
   }
   if(params.debug) {
      fprintf(stderr, "\nDEBUG: dns() Packet has been sucessfully send.\n");
   }
 
-  // timeout
-  struct timeval tv;
-  tv.tv_sec = params.timeout;
-  tv.tv_usec = 0;
-  if(setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof tv) != 0) {
-    perror("setsockopt()");
-    cleanDNSResources(server, rname, send_buffer, receive_buffer);
-    return ESETSOCKETOPT;
-  }
-
   socklen_t size = sizeof(struct sockaddr_in);
-  if(recvfrom(s,(char*)receive_buffer, IP_MAXPACKET, 0, (struct sockaddr*)&server_addr, &size) < 0)
-  {
-    if(errno == 11)
-        perror("recvfrom()");
-    else
-        perror("recvfrom()");
-    cleanDNSResources(server, rname, send_buffer, receive_buffer);
-    return ERECEIVEFROM;
+  socklen_t size6 = sizeof(struct sockaddr_in6);
+  int recvFromReturnValue = 0;
+  if(serverIsIpv6) {
+    recvFromReturnValue = recvfrom(sock, (char*)receive_buffer, IP_MAXPACKET, 0, (struct sockaddr*)&server_addr6, &size6);
+  } else {
+    recvFromReturnValue = recvfrom(sock, (char*)receive_buffer, IP_MAXPACKET, 0, (struct sockaddr*)&server_addr, &size);
   }
+  if(recvFromReturnValue < 0) {
+    perror("recvfrom()");
+    cleanDNSResources(rname, send_buffer, receive_buffer);
+    return ERECEIVEFROM;
+  } 
   if(params.debug) {
-     fprintf(stderr, "\nDEBUG: dns() Packet has been sucessfully received.\n");
+    fprintf(stderr, "\nDEBUG: dns() Packet has been sucessfully received.\n");
   }
 
   DNS_Header* dns_receive_header = (DNS_Header*) receive_buffer;
 
   if(dns_receive_header->qr != 1) {
     fprintf(stderr, "Received response is not signed as response.\n");
-    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    cleanDNSResources(rname, send_buffer, receive_buffer);
     return EMALFORMEDPACKET;
   }
 
   if(dns_receive_header->rcode == 1) {
     fprintf(stderr, "Format error - The name server was unable to interpret the query.\n");
-    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    cleanDNSResources(rname, send_buffer, receive_buffer);
     return EMALFORMEDPACKET;
   }
   else if(dns_receive_header->rcode == 2) {
     fprintf(stderr, "Server failure - The name server was unable to process this query due to a problem with the name server.\n");
-    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    cleanDNSResources(rname, send_buffer, receive_buffer);
     return EMALFORMEDPACKET;
   }
   else if(dns_receive_header->rcode == 3) {
     fprintf(stderr, "Name Error - Meaningful only for responses from an authoritative name server, this code signifies that the domain name referenced in the query does not exist.\n");
-    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    cleanDNSResources(rname, send_buffer, receive_buffer);
     return EMALFORMEDPACKET;
   }
   else if(dns_receive_header->rcode == 4) {
     fprintf(stderr, "Not Implemented - The name server does not support the requested kind of query.\n");
-    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    cleanDNSResources(rname, send_buffer, receive_buffer);
     return EMALFORMEDPACKET;
   }
   else if(dns_receive_header->rcode == 5) {
     fprintf(stderr, "Refused - The name server refuses to perform the specified operation for policy reasons.  For example, a name server may not wish to provide the information to the particular requester, or a name server may not wish to perform a particular operation (e.g., zone.\n");
-    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    cleanDNSResources(rname, send_buffer, receive_buffer);
     return EMALFORMEDPACKET;
   }
 
@@ -486,7 +461,7 @@ int dnsResolver(TParams params) {
   rname = malloc(MAX_NAME_LENGTH + 1);
   if(rname == NULL) {
     fprintf(stderr, "Allocation fails.\n");
-    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    cleanDNSResources(rname, send_buffer, receive_buffer);
     return EALLOC;
   }
 
@@ -507,7 +482,7 @@ int dnsResolver(TParams params) {
     }
   } else {
     fprintf(stderr, "Question of received packet is malformed.\n");
-    cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    cleanDNSResources(rname, send_buffer, receive_buffer);
     return EMALFORMEDPACKET;
   }
 
@@ -518,7 +493,7 @@ int dnsResolver(TParams params) {
   {
     if((ecode = readHostFromResourceRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
       fprintf(stderr, "Program could not read resource record.\n");
-      cleanDNSResources(server, rname, send_buffer, receive_buffer);
+    cleanDNSResources(rname, send_buffer, receive_buffer);
       return ecode;
     }
     response += rname_length;
@@ -568,7 +543,7 @@ int dnsResolver(TParams params) {
   {
     if((ecode = readHostFromResourceRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
       fprintf(stderr, "Program could not read resource record.\n");
-      cleanDNSResources(server, rname, send_buffer, receive_buffer);
+      cleanDNSResources(rname, send_buffer, receive_buffer);
       return ecode;
     }
     response += rname_length;
@@ -602,7 +577,7 @@ int dnsResolver(TParams params) {
   {
     if((ecode = readHostFromResourceRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
       fprintf(stderr, "Program could not read resource record.\n");
-      cleanDNSResources(server, rname, send_buffer, receive_buffer);
+      cleanDNSResources(rname, send_buffer, receive_buffer);
       return ecode;
     }
     response += rname_length;
@@ -646,15 +621,13 @@ int dnsResolver(TParams params) {
   }
 
   // clean
-  cleanDNSResources(server, rname, send_buffer, receive_buffer);
+  cleanDNSResources(rname, send_buffer, receive_buffer);
 
   return ecode;
 }
 
 /* clean all variables allocated inside function dns */
-void cleanDNSResources(struct addrinfo* server, unsigned char* rname, unsigned char* send_buffer, unsigned char* receive_buffer) {
-  if(server != NULL)
-    freeaddrinfo(server);
+void cleanDNSResources(unsigned char* rname, unsigned char* send_buffer, unsigned char* receive_buffer) {
   if(rname != NULL)
     free(rname);
   if(send_buffer != NULL)
@@ -681,13 +654,92 @@ int main(int argc, char *argv[]) {
     return ecode;
   }
 
-  // process dns
-  if((ecode = dnsResolver(params)) != 0) {
+  // server address
+  struct addrinfo hints;
+  struct addrinfo *results = NULL;
+
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_DGRAM;
+  hints.ai_protocol = 0;
+  hints.ai_flags = AI_ADDRCONFIG;
+  if(getaddrinfo(params.server, NULL, &hints, &results) != 0) {
+    fprintf(stderr, "Socket can not be created.\n");
+    return EGETADDRINFO;
+  }
+
+  // IPv4
+  int sock;
+  uint8_t serverIsIpv6 = 0;
+  struct sockaddr_in server_addr;
+  struct sockaddr_in6 server_addr_6;
+
+  do
+  {
+    if(results->ai_family == AF_INET) {
+
+      // create socket
+      if((sock = socket(AF_INET , SOCK_DGRAM , IPPROTO_UDP)) == -1) {
+        fprintf(stderr, "Socket can not be created.\n");
+        return ESOCKET;
+      }
+
+      memset(&server_addr, 0, sizeof(struct sockaddr_in));
+      server_addr.sin_addr = ((struct sockaddr_in*)results->ai_addr)->sin_addr;
+      server_addr.sin_family = AF_INET;
+      server_addr.sin_port = htons(params.port);
+
+      break;
+    }
+    // IPv6
+    else if(results->ai_family == AF_INET6) {
+      serverIsIpv6 = 1;
+
+      // create socket
+      if((sock = socket(AF_INET6 , SOCK_DGRAM , IPPROTO_UDP)) == -1) {
+        fprintf(stderr, "Socket can not be created.\n");
+        return ESOCKET;
+      }
+
+      memset(&server_addr_6, 0, sizeof(struct sockaddr_in6));
+      memcpy(&server_addr_6, results->ai_addr, results->ai_addrlen);
+      server_addr_6.sin6_family = AF_INET6;
+      server_addr_6.sin6_port = htons(params.port);
+
+      break;
+    }
+  }
+  while((results = results->ai_next) != NULL);
+
+  // timeout
+  struct timeval tv;
+  tv.tv_sec = params.timeout;
+  tv.tv_usec = 0;
+  if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof tv) != 0) {
+    perror("setsockopt()");
+
+    // clean
+    close(sock);
+    freeaddrinfo(results);
     cleanParams(params);
+
+    return ESETSOCKETOPT;
+  }
+
+  // process dns request and response
+  if((ecode = dnsResolver(params, sock, server_addr, server_addr_6, serverIsIpv6)) != 0) {
+
+    // clean
+    close(sock);
+    freeaddrinfo(results);
+    cleanParams(params);
+
     return ecode;
   }
 
   // clean
+  close(sock);
+  freeaddrinfo(results);
   cleanParams(params);
 
   return ecode;
