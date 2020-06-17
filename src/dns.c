@@ -321,6 +321,38 @@ int printfDomainNamePointerRecord(unsigned char* response, DNS_RR_Data* dns_rr_d
   return EOK;
 }
 
+/* switch for types of RR */
+int printfDnsRecords(unsigned char* response, unsigned char* receive_buffer, DNS_RR_Data* dns_rr_data, unsigned char* rname, uint32_t rname_length, int debug) {
+  int ecode = EOK;
+
+  if(ntohs(dns_rr_data->rclass) == CLASS_IN) {
+    if(ntohs(dns_rr_data->rtype) == TYPE_A)
+    {
+      if ((ecode = printfIPv4Record(response, dns_rr_data, rname)) != EOK) {
+        return ecode;
+      }
+      response += sizeof(DNS_RR_Data);
+    } else if (ntohs(dns_rr_data->rtype) == TYPE_AAAA) {
+      if ((ecode = printfIPv6Record(response, dns_rr_data, rname)) != EOK) {
+        return ecode;
+      }
+      response += sizeof(DNS_RR_Data);
+    } else if (ntohs(dns_rr_data->rtype) == TYPE_CNAME) {
+      response += sizeof(DNS_RR_Data);
+      if ((ecode = printfCanonicalNameRecord(response, dns_rr_data, receive_buffer, rname, &rname_length, debug)) != EOK) {
+        return ecode;
+      }
+    } else if (ntohs(dns_rr_data->rtype) == TYPE_PTR) {
+      if ((ecode = printfDomainNamePointerRecord(response, dns_rr_data, rname, debug)) != EOK) {
+        return ecode;
+      }
+      response += sizeof(DNS_RR_Data);
+    }
+  }
+  
+  return ecode;
+}
+
 /* handles process of dns request and response */
 int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct sockaddr_in6 server_addr6, int serverIsIpv6) {
   int ecode = EOK;
@@ -486,14 +518,12 @@ int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct
     return EMALFORMEDPACKET;
   }
 
-
-
   printf("Answer section (%d):\n", ntohs(dns_receive_header->ancount));
   for(i = 0; i < ntohs(dns_receive_header->ancount); i++)
   {
     if((ecode = readHostFromResourceRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
       fprintf(stderr, "Program could not read resource record.\n");
-    cleanDNSResources(rname, send_buffer, receive_buffer);
+      cleanDNSResources(rname, send_buffer, receive_buffer);
       return ecode;
     }
     response += rname_length;
@@ -508,29 +538,10 @@ int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct
       fprintf(stderr, "DEBUG: RR rdlength: %i\n", ntohs(dns_rr_data->rdlength));
     }
 
-    if(ntohs(dns_rr_data->rclass) == CLASS_IN) {
-      if(ntohs(dns_rr_data->rtype) == TYPE_A)
-      {
-        if ((ecode = printfIPv4Record(response, dns_rr_data, rname)) != EOK) {
-          return ecode;
-        }
-        response += sizeof(DNS_RR_Data);
-      } else if (ntohs(dns_rr_data->rtype) == TYPE_AAAA) {
-        if ((ecode = printfIPv6Record(response, dns_rr_data, rname)) != EOK) {
-          return ecode;
-        }
-        response += sizeof(DNS_RR_Data);
-      } else if (ntohs(dns_rr_data->rtype) == TYPE_CNAME) {
-        response += sizeof(DNS_RR_Data);
-        if ((ecode = printfCanonicalNameRecord(response, dns_rr_data, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
-          return ecode;
-        }
-      } else if (ntohs(dns_rr_data->rtype) == TYPE_PTR) {
-        if ((ecode = printfDomainNamePointerRecord(response, dns_rr_data, rname, params.debug)) != EOK) {
-          return ecode;
-        }
-        response += sizeof(DNS_RR_Data);
-      }
+    if((ecode = printfDnsRecords(response, receive_buffer, dns_rr_data, rname, rname_length, params.debug)) != EOK) {
+      fprintf(stderr, "Program could not read resource record.\n");
+      cleanDNSResources(rname, send_buffer, receive_buffer);
+      return ecode;
     }
 
     response += rdata_length;
@@ -559,13 +570,10 @@ int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct
 
     response += sizeof(DNS_RR_Data);
 
-    if(ntohs(dns_rr_data->rclass) == CLASS_IN) {
-      if(ntohs(dns_rr_data->rtype) == TYPE_NS) {
-        if ((ecode = printfNSRecord(response, dns_rr_data, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
-          return ecode;
-        }
-        response += rname_length;
-      }
+    if((ecode = printfDnsRecords(response, receive_buffer, dns_rr_data, rname, rname_length, params.debug)) != EOK) {
+      fprintf(stderr, "Program could not read resource record.\n");
+      cleanDNSResources(rname, send_buffer, receive_buffer);
+      return ecode;
     }
   }
 
@@ -592,31 +600,10 @@ int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct
       fprintf(stderr, "DEBUG: rdlength: %i\n", ntohs(dns_rr_data->rdlength));
     }
 
-    if(ntohs(dns_rr_data->rclass) == CLASS_IN) {
-      if(ntohs(dns_rr_data->rtype) == TYPE_A) {
-        if ((ecode = printfIPv4Record(response, dns_rr_data, rname)) != EOK) {
-          return ecode;
-        }
-        response += sizeof(DNS_RR_Data);
-        response += rdata_length;
-      } else if (ntohs(dns_rr_data->rtype) == TYPE_AAAA) {
-        if ((ecode = printfIPv6Record(response, dns_rr_data, rname)) != EOK) {
-          return ecode;
-        }
-        response += sizeof(DNS_RR_Data);
-        response += rdata_length;
-      } else if(ntohs(dns_rr_data->rtype) == TYPE_NS) {
-        if ((ecode = printfNSRecord(response, dns_rr_data, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
-          return ecode;
-        }
-        response += sizeof(DNS_RR_Data);
-        response += rname_length;
-      } else if (ntohs(dns_rr_data->rtype) == TYPE_PTR) {
-        if ((ecode = printfDomainNamePointerRecord(response, dns_rr_data, rname, params.debug)) != EOK) {
-          return ecode;
-        }
-        response += sizeof(DNS_RR_Data);
-      }
+    if((ecode = printfDnsRecords(response, receive_buffer, dns_rr_data, rname, rname_length, params.debug)) != EOK) {
+      fprintf(stderr, "Program could not read resource record.\n");
+      cleanDNSResources(rname, send_buffer, receive_buffer);
+      return ecode;
     }
   }
 

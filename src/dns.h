@@ -99,6 +99,7 @@ typedef struct dns_rr_data
 #pragma pack(pop)
 
 int main(int argc, char *argv[]);
+int printfDnsRecords(unsigned char* response, unsigned char* receive_buffer, DNS_RR_Data* dns_rr_data, unsigned char* rname, uint32_t rname_length, int debug);
 int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct sockaddr_in6 server_addr6, int serverIsIpv6);
 int readHostFromResourceRecord(unsigned char* reader, unsigned char* buffer, unsigned char* host, uint32_t* host_length, int debug);
 void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* host, int debug);
