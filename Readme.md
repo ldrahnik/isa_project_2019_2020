@@ -112,7 +112,6 @@ xdrahn00/
 │   └── params.h
 └── tests
     ├── logs
-    │   └── server_log
     ├── ref
     │   ├── 1
     │   ├── 2

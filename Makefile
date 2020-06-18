@@ -15,7 +15,7 @@ P_DOC_FOLDER = doc/
 P_DOC_RESULT = $(P_DOC_NAME).pdf
 P_DOC_MAKEFILE = doc/Makefile
 P_README = README
-P_TESTS = tests/tests.sh tests/ref/* tests/server/src/*.c tests/server/src/*.h tests/server/Makefile tests/server/Readme.md tests/logs/server_log
+P_TESTS = tests/tests.sh tests/ref/* tests/server/src/*.c tests/server/src/*.h tests/server/Makefile tests/server/Readme.md tests/logs/
 P_SOURCES = src/*.c
 P_HEADERS = src/*.h
 
