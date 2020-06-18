@@ -1,7 +1,7 @@
 DNS Server
 ============
 
-Server přijímá zaslané DNS dotazy na localhostu na konkrétním portu a ukládá je to log souboru uvedeného z parametrů.
+Server na localhostu na uvedeném portu přijímá DNS dotazy a vypisuje jejich obsah na standartní výstup.
 
 ## Příklad spuštění:
 
