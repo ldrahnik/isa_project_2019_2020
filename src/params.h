@@ -9,6 +9,9 @@
 #ifndef _params_H_
 #define _params_H_
 
+#include "query.h"
+#include "error.h"
+
 #include "string.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,11 +22,6 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
-
-#include "error.h"
-
-#define IP6_ARPA_TERMINATION "ip6.arpa."
-#define IP4_ARPA_TERMINATION "in-addr.arpa."
 
 typedef struct params {
   uint8_t ecode; // error code

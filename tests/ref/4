@@ -8,8 +8,8 @@ rcode 0
 z 0
 ra 0
 qdcount 1
-qname 23.9.229.147.in-addr.arpa
-qtype 12
-qclass 1
+qname 23.9.229.147.in-addr.arpa.
+qtype 3072
+qclass 256
 ########
 

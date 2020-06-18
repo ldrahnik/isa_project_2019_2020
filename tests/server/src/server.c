@@ -122,11 +122,11 @@ int dnsServer(TParams params) {
       // DNS question
       // qname
       unsigned char* dns_response_qname = (receive_buffer + sizeof(DNS_Header));
-      convertHostFromDNSFormat(dns_response_qname, qname);
+      convertHostFromDNSFormat(dns_response_qname, qname, params.debug);
       printf("qname %s\n", qname);
 
       // type, class
-  DNS_Question* dns_response_question = (DNS_Question*) (receive_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 2));
+      DNS_Question* dns_response_question = (DNS_Question*) (receive_buffer + sizeof(DNS_Header) + (strlen((const char*)qname) + 2));
       printf("qtype %i\n", ntohs(dns_response_question->qtype));
       printf("qclass %i\n", ntohs(dns_response_question->qclass));
 
@@ -145,31 +145,6 @@ int dnsServer(TParams params) {
   close(s);
 
   return EXIT_SUCCESS;
-}
-
-/* converts 3www3fit5vutbr2cz0 -> www.fit.vutbr.cz */
-void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* host) {
-  uint32_t i, j, last_number_index = 0;
-
-  for(i = 0; i < strlen((char*)dns_host_format); i++) {
-    last_number_index = dns_host_format[i];
-
-    for(j = 0; j < (uint32_t)last_number_index; j++)
-    {
-       host[i] = dns_host_format[i + 1];
-       i++;
-    }
-    host[i] = '.';
-
-    if(host[i] == '\0') {
-      break;
-    }
-  }
-
-  if(i > 0)
-    host[i - 1] = '\0';
-  else
-    host[0] = '\0';
 }
 
 /* main */

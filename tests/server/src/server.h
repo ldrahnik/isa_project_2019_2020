@@ -10,7 +10,7 @@
 #define _server_H_
 
 #include "params.h"
-#include "dns.h"
+#include "./../../../src/query.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,6 +25,5 @@
 
 int main(int argc, char *argv[]);
 int dnsServer(TParams params);
-void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* host);
 
 #endif

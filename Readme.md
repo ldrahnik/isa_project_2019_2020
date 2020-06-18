@@ -97,7 +97,7 @@ bash ./tests/tests.sh /dns
 ## Odevzdané soubory:
 
 ```
-xdrahn00/
+xdrahn00
 ├── dns.1
 ├── dns.spec
 ├── LICENSE
@@ -109,7 +109,9 @@ xdrahn00/
 │   ├── dns.h
 │   ├── error.h
 │   ├── params.c
-│   └── params.h
+│   ├── params.h
+│   ├── query.c
+│   └── query.h
 └── tests
     ├── logs
     ├── ref
@@ -122,7 +124,6 @@ xdrahn00/
     │   ├── Makefile
     │   ├── Readme.md
     │   └── src
-    │       ├── dns.h
     │       ├── params.c
     │       ├── params.h
     │       ├── server.c

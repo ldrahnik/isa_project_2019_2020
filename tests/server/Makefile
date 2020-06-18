@@ -9,8 +9,8 @@
 P_NAME = server
 P_MAKEFILE = Makefile
 P_README = Readme.md
-P_SOURCES = src/*.c
-P_HEADERS = src/*.h
+P_SOURCES = src/*.c ./../../src/query.c
+P_HEADERS = src/*.h ./../../src/query.h
 
 ################# FLAGS ###########################
 

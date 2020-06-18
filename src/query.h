@@ -3,11 +3,13 @@
  * Project: ISA: DNS resolver
  * Date: 14.11.2019
  * Email: <xdrahn00@stud.fit.vutbr.cz>
- * File: dns.h
+ * File: query.h
  */
 
-#ifndef _dns_H_
-#define _dns_H_
+#ifndef _query_H_
+#define _query_H_
+
+#include "error.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +20,16 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
+
+/*
+ * https://tools.ietf.org/html/rfc3596#section-2.5
+ */
+#define IP6_ARPA_TERMINATION "ip6.arpa."
+
+/*
+ * https://www.ietf.org/rfc/rfc1035.txt (3.5. IN-ADDR.ARPA domain)
+ */
+#define IP4_ARPA_TERMINATION "in-addr.arpa."
 
 /* 
  * Maximum packet size. Already contains netinet/ip.h in some versions. Has been overridden for sure.
@@ -96,5 +108,10 @@ typedef struct dns_rr_data
 // unsigned char *rdata; (variable length)
 #pragma pack(pop)
 
+int main(int argc, char *argv[]);
+void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* host, int debug);
+void convertHostToDNSFormat(unsigned char* host, unsigned char* dns_host_format, int debug);
+int convertIPv6ToARPAFormat(char* address, char* address_arpa_format, int debug);
+int convertIPv4ToARPAFormat(char* address, char* address_arpa_format, int debug);
 
 #endif

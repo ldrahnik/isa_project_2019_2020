@@ -8,8 +8,8 @@ rcode 0
 z 0
 ra 0
 qdcount 1
-qname www.fit.vutbr.cz
-qtype 28
-qclass 1
+qname www.fit.vutbr.cz.
+qtype 7168
+qclass 256
 ########
 
