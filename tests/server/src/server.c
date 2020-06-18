@@ -11,7 +11,7 @@
 const char *HELP_MSG = {
   "DNS server\n\n"
   "Usage:\n\n"
-  "./server [-h] [-d] [-p port]\n\n"
+  "./server [-h] [-d] [-e] [-p port]\n\n"
   "Any order of options is acceptable but all of them have to be before non-option inputs. Options:\n"
   "-h: Show help message\n"
   "-d: Enable debug mode\n"

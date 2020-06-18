@@ -11,7 +11,7 @@ DNS server
 
 Usage:
 
-./server [-h] [-d] [-p port]
+./server [-h] [-d] [-e] [-p port]
 
 Any order of options is acceptable but all of them have to be before non-option inputs. Options:
 -h: Show help message
