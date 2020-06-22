@@ -108,7 +108,6 @@ typedef struct dns_rr_data
 // unsigned char *rdata; (variable length)
 #pragma pack(pop)
 
-int main(int argc, char *argv[]);
 void convertHostFromDNSFormat(unsigned char* dns_host_format, unsigned char* host, int debug);
 void convertHostToDNSFormat(unsigned char* host, unsigned char* dns_host_format, int debug);
 int convertIPv6ToARPAFormat(char* address, char* address_arpa_format, int debug);
