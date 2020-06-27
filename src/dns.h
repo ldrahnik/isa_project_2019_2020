@@ -34,5 +34,6 @@ int printfIPv4Record(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned
 int printfNSRecord(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* receive_buffer, unsigned char* rname, uint32_t* host_length, int debug);
 int printfDomainNamePointerRecord(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* rname, int debug);
 int printfCanonicalNameRecord(unsigned char* response, DNS_RR_Data* dns_rr_data, unsigned char* receive_buffer, unsigned char* rname, uint32_t* rname_length, int debug);
+void printRCodeErrorMessage(int code);
 
 #endif

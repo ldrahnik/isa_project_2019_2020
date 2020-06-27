@@ -280,6 +280,30 @@ int printfDnsRecords(unsigned char* response, unsigned char* receive_buffer, DNS
   return ecode;
 }
 
+/* https://tools.ietf.org/html/rfc2929#section-2.3 */
+void printRCodeErrorMessage(int code) {
+  switch(code) {
+    case 1:
+      fprintf(stderr, "Format error - The name server was unable to interpret the query.\n");
+      break;
+    case 2:
+      fprintf(stderr, "Server failure - The name server was unable to process this query due to a problem with the name server.\n");
+      break;
+    case 3:
+      fprintf(stderr, "Name Error - Meaningful only for responses from an authoritative name server, this code signifies that the domain name referenced in the query does not exist.\n");
+      break;
+    case 4:
+      fprintf(stderr, "Not Implemented - The name server does not support the requested kind of query.\n");
+      break;
+    case 5:
+      fprintf(stderr, "Refused - The name server refuses to perform the specified operation for policy reasons.  For example, a name server may not wish to provide the information to the particular requester, or a name server may not wish to perform a particular operation (e.g., zone.\n");
+      break;
+    default:
+      fprintf(stderr, "Rcode: %d\n", code);
+      break;
+  }
+}
+
 /* handles process of dns request and response */
 int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct sockaddr_in6 server_addr6, int serverIsIpv6) {
   int ecode = EOK;
@@ -372,34 +396,15 @@ int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct
 
   DNS_Header* dns_receive_header = (DNS_Header*) receive_buffer;
 
+
   if(dns_receive_header->qr != 1) {
     fprintf(stderr, "Received response is not signed as response.\n");
     cleanDNSResources(rname, send_buffer, receive_buffer);
     return EMALFORMEDPACKET;
   }
 
-  if(dns_receive_header->rcode == 1) {
-    fprintf(stderr, "Format error - The name server was unable to interpret the query.\n");
-    cleanDNSResources(rname, send_buffer, receive_buffer);
-    return EMALFORMEDPACKET;
-  }
-  else if(dns_receive_header->rcode == 2) {
-    fprintf(stderr, "Server failure - The name server was unable to process this query due to a problem with the name server.\n");
-    cleanDNSResources(rname, send_buffer, receive_buffer);
-    return EMALFORMEDPACKET;
-  }
-  else if(dns_receive_header->rcode == 3) {
-    fprintf(stderr, "Name Error - Meaningful only for responses from an authoritative name server, this code signifies that the domain name referenced in the query does not exist.\n");
-    cleanDNSResources(rname, send_buffer, receive_buffer);
-    return EMALFORMEDPACKET;
-  }
-  else if(dns_receive_header->rcode == 4) {
-    fprintf(stderr, "Not Implemented - The name server does not support the requested kind of query.\n");
-    cleanDNSResources(rname, send_buffer, receive_buffer);
-    return EMALFORMEDPACKET;
-  }
-  else if(dns_receive_header->rcode == 5) {
-    fprintf(stderr, "Refused - The name server refuses to perform the specified operation for policy reasons.  For example, a name server may not wish to provide the information to the particular requester, or a name server may not wish to perform a particular operation (e.g., zone.\n");
+  if(dns_receive_header->rcode != 0) {
+    printRCodeErrorMessage(dns_receive_header->rcode);
     cleanDNSResources(rname, send_buffer, receive_buffer);
     return EMALFORMEDPACKET;
   }
