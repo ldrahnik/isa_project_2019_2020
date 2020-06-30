@@ -276,7 +276,7 @@ int printfDnsRecords(unsigned char* response, unsigned char* receive_buffer, DNS
       response += sizeof(DNS_RR_Data);
     }
   }
-  
+
   return ecode;
 }
 
@@ -313,8 +313,6 @@ int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct
   unsigned char* receive_buffer = NULL;
   unsigned char* rname = NULL;
 
-  uint8_t i = 0;
-
   // create buffer's
   send_buffer = malloc(sizeof(DNS_Header) + strlen((const char*)params.address) + 2 + sizeof(DNS_Question));
   if(send_buffer == NULL) {
@@ -323,6 +321,11 @@ int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct
   }
   receive_buffer = malloc(IP_MAXPACKET);
   if(receive_buffer == NULL) {
+    fprintf(stderr, "Allocation fails.\n");
+    return EALLOC;
+  }
+  rname = malloc(MAX_NAME_LENGTH + 1);
+  if(rname == NULL) {
     fprintf(stderr, "Allocation fails.\n");
     return EALLOC;
   }
@@ -377,6 +380,7 @@ int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct
      fprintf(stderr, "\nDEBUG: dns() Packet has been sucessfully send.\n");
   }
 
+  // receive dns response
   socklen_t size = sizeof(struct sockaddr_in);
   socklen_t size6 = sizeof(struct sockaddr_in6);
   int recvFromReturnValue = 0;
@@ -385,27 +389,40 @@ int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct
   } else {
     recvFromReturnValue = recvfrom(sock, (char*)receive_buffer, IP_MAXPACKET, 0, (struct sockaddr*)&server_addr, &size);
   }
+
+  // process dns response
+  if((ecode = processDnsResponse(params, recvFromReturnValue, receive_buffer, rname, qname)) != EOK) {
+    cleanDNSResources(rname, send_buffer, receive_buffer);
+    return ecode;
+  }
+
+  // clean
+  cleanDNSResources(rname, send_buffer, receive_buffer);
+
+  return ecode;
+}
+
+int processDnsResponse(TParams params, int recvFromReturnValue, unsigned char* receive_buffer, unsigned char* rname, unsigned char* qname) {
+  int ecode = EOK;
+
   if(recvFromReturnValue < 0) {
     perror("recvfrom()");
-    cleanDNSResources(rname, send_buffer, receive_buffer);
     return ERECEIVEFROM;
-  } 
+  }
+
   if(params.debug) {
     fprintf(stderr, "\nDEBUG: dns() Packet has been sucessfully received.\n");
   }
 
   DNS_Header* dns_receive_header = (DNS_Header*) receive_buffer;
 
-
   if(dns_receive_header->qr != 1) {
     fprintf(stderr, "Received response is not signed as response.\n");
-    cleanDNSResources(rname, send_buffer, receive_buffer);
     return EMALFORMEDPACKET;
   }
 
   if(dns_receive_header->rcode != 0) {
     printRCodeErrorMessage(dns_receive_header->rcode);
-    cleanDNSResources(rname, send_buffer, receive_buffer);
     return EMALFORMEDPACKET;
   }
 
@@ -422,15 +439,7 @@ int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct
   );
 
   uint32_t rname_length = 0;
-  rname = malloc(MAX_NAME_LENGTH + 1);
-  if(rname == NULL) {
-    fprintf(stderr, "Allocation fails.\n");
-    cleanDNSResources(rname, send_buffer, receive_buffer);
-    return EALLOC;
-  }
-
   DNS_RR_Data* dns_rr_data;
-
 
 
   printf("Question section (%d):\n", ntohs(dns_receive_header->qdcount));
@@ -446,16 +455,16 @@ int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct
     }
   } else {
     fprintf(stderr, "Question of received packet is malformed.\n");
-    cleanDNSResources(rname, send_buffer, receive_buffer);
     return EMALFORMEDPACKET;
   }
+
+  uint8_t i = 0;
 
   printf("Answer section (%d):\n", ntohs(dns_receive_header->ancount));
   for(i = 0; i < ntohs(dns_receive_header->ancount); i++)
   {
     if((ecode = readHostFromResourceRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
       fprintf(stderr, "Program could not read resource record.\n");
-      cleanDNSResources(rname, send_buffer, receive_buffer);
       return ecode;
     }
     response += rname_length;
@@ -472,21 +481,17 @@ int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct
 
     if((ecode = printfDnsRecords(response, receive_buffer, dns_rr_data, rname, rname_length, params.debug)) != EOK) {
       fprintf(stderr, "Program could not read resource record.\n");
-      cleanDNSResources(rname, send_buffer, receive_buffer);
       return ecode;
     }
 
     response += rdata_length;
   }
 
-
-
   printf("Authority section (%d):\n", ntohs(dns_receive_header->nscount));
   for(i = 0; i < (int)ntohs(dns_receive_header->nscount); i++)
   {
     if((ecode = readHostFromResourceRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
       fprintf(stderr, "Program could not read resource record.\n");
-      cleanDNSResources(rname, send_buffer, receive_buffer);
       return ecode;
     }
     response += rname_length;
@@ -504,20 +509,15 @@ int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct
 
     if((ecode = printfDnsRecords(response, receive_buffer, dns_rr_data, rname, rname_length, params.debug)) != EOK) {
       fprintf(stderr, "Program could not read resource record.\n");
-      cleanDNSResources(rname, send_buffer, receive_buffer);
       return ecode;
     }
   }
-
-
-
 
   printf("Additional section (%d):\n", ntohs(dns_receive_header->arcount));
   for(i = 0; i < ntohs(dns_receive_header->arcount); i++)
   {
     if((ecode = readHostFromResourceRecord(response, receive_buffer, rname, &rname_length, params.debug)) != EOK) {
       fprintf(stderr, "Program could not read resource record.\n");
-      cleanDNSResources(rname, send_buffer, receive_buffer);
       return ecode;
     }
     response += rname_length;
@@ -534,14 +534,9 @@ int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct
 
     if((ecode = printfDnsRecords(response, receive_buffer, dns_rr_data, rname, rname_length, params.debug)) != EOK) {
       fprintf(stderr, "Program could not read resource record.\n");
-      cleanDNSResources(rname, send_buffer, receive_buffer);
       return ecode;
     }
   }
-
-  // clean
-  cleanDNSResources(rname, send_buffer, receive_buffer);
-
   return ecode;
 }
 

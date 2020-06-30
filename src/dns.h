@@ -23,6 +23,7 @@
 #include <netdb.h>
 
 int main(int argc, char *argv[]);
+int processDnsResponse(TParams params, int recvFromReturnValue, unsigned char* receive_buffer, unsigned char* rname, unsigned char* qname);
 int printfDnsRecords(unsigned char* response, unsigned char* receive_buffer, DNS_RR_Data* dns_rr_data, unsigned char* rname, uint32_t rname_length, int debug);
 int dnsResolver(TParams params, int sock, struct sockaddr_in server_addr, struct sockaddr_in6 server_addr6, int serverIsIpv6);
 int convertIPv6FromBinaryFormToShortestReadableForm(unsigned char* rdata, unsigned char* shortest_readable);
